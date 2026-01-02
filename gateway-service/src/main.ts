@@ -1,8 +1,14 @@
-import { Logger } from '@nestjs/common'
+import { Logger, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
+import { SwaggerModule } from '@nestjs/swagger'
 
-import { AppModule } from './app.module'
+import { AppModule } from './core/app.module'
+import {
+	getCorsConfig,
+	getSwaggerConfig,
+	getValidationPipeConfig
+} from './core/config'
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule)
@@ -10,17 +16,24 @@ async function bootstrap() {
 	const config = app.get(ConfigService)
 	const logger = new Logger()
 
-	app.enableCors({
-		origin: config.getOrThrow<string>('HTTP_CORS').split(','),
-		credentials: true // для поддержки куки чтоб их парсить
-	})
+	app.useGlobalPipes(new ValidationPipe(getValidationPipeConfig()))
 
-	const port = config.getOrThrow<number>('NTTP_PORT')
-	const host = config.getOrThrow<string>('NTTP_HOST')
+	app.enableCors(getCorsConfig(config))
+
+	const port = config.getOrThrow<number>('HTTP_PORT')
+	const host = config.getOrThrow<string>('HTTP_HOST')
+
+	const swaggerConfig = getSwaggerConfig()
+
+	const documentFactory = () =>
+		SwaggerModule.createDocument(app, swaggerConfig)
+	SwaggerModule.setup('/docs', app, documentFactory, {
+		yamlDocumentUrl: '/openapi.yaml'
+	})
 
 	await app.listen(port)
 
-	logger.log(`Gateway is running on: ${host}:${port}`)
-	logger.log(`Swagger is running on: ${host}/docs`)
+	logger.log(`🚀🚀🚀 Gateway is running on: ${host}:${port}`)
+	logger.log(`🚀Swagger is running on: ${host}/docs`)
 }
 bootstrap()
