@@ -1,0 +1,30 @@
+name: Publish
+
+on:
+  push: # при push на ветку main
+    branches:
+      - 'main'
+
+jobs:
+  publish: # задача publish
+    name: Publish Job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout REPO
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Publish
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

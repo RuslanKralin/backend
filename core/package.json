@@ -1,0 +1,24 @@
+{
+  "name": "@ticket_for_cinema/core",
+  "version": "1.0.6",
+  "description": "Core utilities and shared setup",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "ISC",
+  "author": {
+    "name": "RUSLAN KRALIN",
+    "email": "kralin.front@gmail.com"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "dependencies": {
+    "@ticket_for_cinema/core": "^1.0.6",
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2"
+  },
+  "exports": {
+    "./prettier": "./src/prettier.config.mjs"
+  }
+}
