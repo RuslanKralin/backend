@@ -10,6 +10,7 @@ export default tseslint.config(
       "eslint.config.mjs",
       ".prettier.config.mjs",
       "prettier.config.mjs",
+      "prisma/generated/**/*",
     ],
   },
   eslint.configs.recommended,

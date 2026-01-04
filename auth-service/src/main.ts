@@ -1,6 +1,10 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { MicroserviceOptions, Transport } from "@nestjs/microservices";
+import * as dotenv from "dotenv";
+
+// Загружаем .env файл
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,4 +27,5 @@ async function bootstrap() {
   await app.startAllMicroservices();
   await app.init();
 }
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();

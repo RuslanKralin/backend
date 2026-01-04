@@ -12,11 +12,7 @@ export class AuthController {
   public constructor(private readonly authService: AuthService) {}
 
   @GrpcMethod("AuthService", "SendOtp")
-  // eslint-disable-next-line @typescript-eslint/require-await
   public async sentOtp(data: SendOtpRequest): Promise<SendOtpResponse> {
-    console.log("data", data);
-    return {
-      ok: true,
-    };
+    return await this.authService.sendOtp(data);
   }
 }

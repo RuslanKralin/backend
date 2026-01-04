@@ -11,12 +11,12 @@ export class IdentifierValidator implements ValidatorConstraintInterface {
 		const object = args.object as SendOtpRequest
 
 		if (object.type === 'phone') {
-			// Валидация телефона: 12 цифр, начинается с + (международный формат)
+			// Валидация телефона: начинается с +, затем только цифры
 			return (
 				typeof value === 'string' &&
-				value.length === 12 &&
 				value.startsWith('+') &&
-				/^\+\d+$/.test(value)
+				/^\+\d+$/.test(value) &&
+				value.length > 8
 			)
 		}
 
