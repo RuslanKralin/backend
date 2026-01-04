@@ -4,9 +4,11 @@ import { AuthController } from "./auth.controller";
 import { PrismaModule } from "@/infra/prisma/prisma.module";
 import { AuthRepo } from "./auth.repo";
 
+import { OtpModule } from "@/modules/otp/otp.module";
+
 @Module({
   controllers: [AuthController],
   providers: [AuthService, AuthRepo],
-  imports: [PrismaModule],
+  imports: [PrismaModule, OtpModule],
 })
 export class AuthModule {}

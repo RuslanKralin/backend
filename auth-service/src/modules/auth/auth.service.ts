@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from "@nestjs/common";
 import { Account } from "@prisma/generated/client";
 import type {
@@ -5,10 +7,15 @@ import type {
   SendOtpResponse,
 } from "@ticket_for_cinema/contracts/gen/auth";
 import { AuthRepo } from "./auth.repo";
+import { OtpService } from "@/modules/otp/otp.service";
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly authRepo: AuthRepo) {}
+  constructor(
+    private readonly authRepo: AuthRepo,
+    // eslint-disable-next-line prettier/prettier
+    private readonly otpService: OtpService
+  ) {}
   public async sendOtp(data: SendOtpRequest): Promise<SendOtpResponse> {
     const { identifier, type } = data;
     let account: Account | null;
@@ -23,8 +30,15 @@ export class AuthService {
         phone: type === "phone" ? identifier : undefined,
       });
     }
+
+    const code = await this.otpService.sendOtp(
+      identifier,
+      type as "phone" | "email"
+    );
+
     return {
       ok: true,
-    };
+      code: code.code,
+    } as SendOtpResponse;
   }
 }
