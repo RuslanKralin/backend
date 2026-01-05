@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, Post } from '@nestjs/common'
 import { ApiOperation } from '@nestjs/swagger'
 
 import { AuthGrpcClient } from './auth.grpc'
-import { SendOtpRequest } from './dto'
+import { SendOtpRequest, VerifyOtpRequest } from './dto'
 
 @Controller('auth')
 export class AuthController {
@@ -16,5 +16,16 @@ export class AuthController {
 	public async sendOtp(@Body() dto: SendOtpRequest) {
 		console.log(dto)
 		return this.authGrpcClient.sendOtp(dto)
+	}
+
+	@ApiOperation({
+		summary: 'Verify OTP code',
+		description: 'Verify OTP code sent to user'
+	})
+	@Post('verify-otp')
+	@HttpCode(200)
+	public async verifyOtp(@Body() dto: VerifyOtpRequest) {
+		console.log(dto)
+		return this.authGrpcClient.verifyOtp(dto)
 	}
 }

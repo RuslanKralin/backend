@@ -3,7 +3,9 @@ import { ClientGrpc } from '@nestjs/microservices'
 import {
 	AuthServiceClient,
 	SendOtpRequest,
-	SendOtpResponse
+	SendOtpResponse,
+	VerifyOtpRequest,
+	VerifyOtpResponse
 } from '@ticket_for_cinema/contracts/gen/auth'
 import { lastValueFrom } from 'rxjs'
 
@@ -31,5 +33,11 @@ export class AuthGrpcClient implements OnModuleInit {
 		// authClient.sendOtp(data) возвращает Observable (поток данных)
 		// lastValueFrom преобразует Observable в Promise для удобства использования
 		return lastValueFrom(this.authClient.sendOtp(data))
+	}
+
+	public async verifyOtp(data: VerifyOtpRequest): Promise<VerifyOtpResponse> {
+		// authClient.verifyOtp(data) возвращает Observable (поток данных)
+		// lastValueFrom преобразует Observable в Promise для удобства использования
+		return lastValueFrom(this.authClient.verifyOtp(data))
 	}
 }

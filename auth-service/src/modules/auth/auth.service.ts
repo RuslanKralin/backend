@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from "@nestjs/common";
@@ -5,9 +6,12 @@ import { Account } from "@prisma/generated/client";
 import type {
   SendOtpRequest,
   SendOtpResponse,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
 } from "@ticket_for_cinema/contracts/gen/auth";
 import { AuthRepo } from "./auth.repo";
 import { OtpService } from "@/modules/otp/otp.service";
+import { RpcException } from "@nestjs/microservices";
 
 @Injectable()
 export class AuthService {
@@ -40,5 +44,32 @@ export class AuthService {
       ok: true,
       code: code.code,
     } as SendOtpResponse;
+  }
+
+  public async verifyOtp(data: VerifyOtpRequest): Promise<VerifyOtpResponse> {
+    const { identifier, type, code } = data;
+
+    await this.otpService.verifyOtp(
+      identifier,
+      code,
+      type as "phone" | "email"
+    );
+
+    let account: Account | null;
+    if (type === "phone") {
+      account = await this.authRepo.findUserByPhone(identifier);
+    } else {
+      account = await this.authRepo.findUserByEmail(identifier);
+    }
+
+    if (!account) throw new RpcException("Account not found");
+
+    if (type === "phone" && !account.isPhoneVerified) {
+      await this.authRepo.updateAccount(account.id, { isPhoneVerified: true });
+    }
+    if (type === "email" && !account.isEmailVerified) {
+      await this.authRepo.updateAccount(account.id, { isEmailVerified: true });
+    }
+    return { accessToken: "123456", refreshToken: "987654" };
   }
 }

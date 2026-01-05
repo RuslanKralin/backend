@@ -30,7 +30,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
-    "@ticket_for_cinema/contracts": "^1.0.0",
+    "@ticket_for_cinema/contracts": "^1.0.1",
     "@ticket_for_cinema/core": "^1.0.6",
     "dotenv": "^17.2.3",
     "ioredis": "^5.8.2",

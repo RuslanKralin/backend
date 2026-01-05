@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable } from "@nestjs/common";
 import { RedisService } from "../../infra/redis/redis.service";
 import * as crypto from "crypto";
 import { Logger } from "@nestjs/common";
+import { RpcException } from "@nestjs/microservices";
 
 type OtpType = "phone" | "email";
 
@@ -31,5 +34,20 @@ export class OtpService {
     const hash = crypto.createHash("sha256").update(code).digest("hex");
     this.logger.log(`Generated OTP: ${code}, Hash: ${hash}`);
     return { code, hash };
+  }
+
+  public async verifyOtp(identifier: string, otp: string, type: OtpType) {
+    const storedHash = await this.redisService.get(`otp:${type}:${identifier}`);
+    if (!storedHash) {
+      throw new RpcException("Invalid or expired code");
+    }
+
+    const inputHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    if (inputHash !== storedHash) {
+      throw new RpcException("Invalid code");
+    } else {
+      await this.redisService.del(`otp:${type}:${identifier}`);
+    }
   }
 }
