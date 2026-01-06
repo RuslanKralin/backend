@@ -1,1 +1,2 @@
-export * from './grpc-exaption-filter.ts'
+export * from './grpc-exaption.filter'
+export * from './global-exception.filter'

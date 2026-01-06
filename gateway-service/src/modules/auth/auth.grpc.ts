@@ -7,7 +7,8 @@ import {
 	VerifyOtpRequest,
 	VerifyOtpResponse
 } from '@ticket_for_cinema/contracts/gen/auth'
-import { lastValueFrom } from 'rxjs'
+import { lastValueFrom, throwError } from 'rxjs'
+import { catchError } from 'rxjs/operators'
 
 @Injectable()
 export class AuthGrpcClient implements OnModuleInit {
@@ -36,8 +37,13 @@ export class AuthGrpcClient implements OnModuleInit {
 	}
 
 	public async verifyOtp(data: VerifyOtpRequest): Promise<VerifyOtpResponse> {
-		// authClient.verifyOtp(data) возвращает Observable (поток данных)
-		// lastValueFrom преобразует Observable в Promise для удобства использования
-		return lastValueFrom(this.authClient.verifyOtp(data))
+		return lastValueFrom(
+			this.authClient.verifyOtp(data).pipe(
+				catchError(error => {
+					// Преобразуем gRPC ошибку в RpcException чтобы фильтр её поймал
+					return throwError(() => error)
+				})
+			)
+		)
 	}
 }

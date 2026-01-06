@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from "@nestjs/common";
 import { Account } from "@prisma/generated/client";
 import type {
@@ -17,7 +15,7 @@ import { RpcException } from "@nestjs/microservices";
 export class AuthService {
   constructor(
     private readonly authRepo: AuthRepo,
-    // eslint-disable-next-line prettier/prettier
+
     private readonly otpService: OtpService
   ) {}
   public async sendOtp(data: SendOtpRequest): Promise<SendOtpResponse> {
@@ -62,7 +60,8 @@ export class AuthService {
       account = await this.authRepo.findUserByEmail(identifier);
     }
 
-    if (!account) throw new RpcException("Account not found");
+    if (!account)
+      throw new RpcException({ code: 5, message: "Account not found" });
 
     if (type === "phone" && !account.isPhoneVerified) {
       await this.authRepo.updateAccount(account.id, { isPhoneVerified: true });
