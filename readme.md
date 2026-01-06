@@ -11,9 +11,12 @@
 7. подключили redis для сохранения otp кодов
 8. сделали роут с логикой на верификацию OTP кода и возвращением токенов (access и refresh)
 9. решаем проблему централизованного обработки ошибок в микросервисах и grpc
-10. Создаем общую папку для общих типов и enumов (common/lib/enums) для дальнейшей публикации в npm
+10. Важнейшая тема!!! для обработки ошибок в микросервисах и grpc. Создаем общую папку для общих типов и enumов (common/lib/enums) для дальнейшей публикации в npm
     нужно создать там packege.json и выполнить yarn add -D prettier typescript @types/node @ticket_for_cinema/core
+    инициализируем там tsconfig.json с помощью команды: yarn tsc --init 
+11. Кастомная валидация env переменных. Лучше вынести в отдельный пакет в common/lib/env
 
-    инициализируем там tsconfig.json с помощью команды: yarn tsc --init  
+
+     
     это триггер для комита
     git commit --allow-empty -m "trigger: test with new commit"

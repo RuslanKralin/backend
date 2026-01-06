@@ -3,10 +3,10 @@ import {
   Logger,
   OnModuleDestroy,
   OnModuleInit,
-} from "@nestjs/common";
-import { PrismaClient } from "@prisma/generated/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import * as dotenv from "dotenv";
+} from '@nestjs/common';
+import { PrismaClient } from '@prisma/generated/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -23,7 +23,7 @@ export class PrismaService
     });
     super({
       adapter,
-      log: ["error", "warn"],
+      log: ['error', 'warn'],
     });
   }
 
@@ -42,10 +42,10 @@ export class PrismaService
   }
 
   public async onModuleDestroy() {
-    this.logger.log("Closing database connection...");
+    this.logger.log('Closing database connection...');
     try {
       await this.$disconnect();
-      this.logger.log("Database connection closed");
+      this.logger.log('Database connection closed');
     } catch (error) {
       this.logger.error(`Failed to close database connection: ${error}`);
     }
