@@ -1,8 +1,8 @@
 // ClassConstructor - тип для работы с классами
 // plainToInstance - преобразует обычный объект в экземпляр класса
-import { ClassConstructor, plainToInstance } from 'class-transformer';
+import { ClassConstructor, plainToInstance } from "class-transformer";
 // validateSync - синхронная функция валидации
-import { validateSync } from 'class-validator';
+import { validateSync } from "class-validator";
 
 // Функция для валидации переменных окружения
 // Принимает:
@@ -29,13 +29,13 @@ export function validateEnv<T extends object>(
     // Формируем читаемое сообщение об ошибке
     const errorMessage = errors
       .map(
-        error =>
+        (error) =>
           `\nError in ${error.property}: \n ` +
           Object.entries(error.constraints)
             .map(([key, value]) => `+ \n${key}: ${value}`)
-            .join('\n'),
+            .join("\n"),
       )
-      .join('\n');
+      .join("\n");
 
     // Выводим ошибку в консоль
     console.error(`\n\nInvalid environment variables:\n${errorMessage}\n\n`);

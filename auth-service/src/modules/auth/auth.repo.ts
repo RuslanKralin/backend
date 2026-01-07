@@ -1,11 +1,11 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../infra/prisma/prisma.service';
-import { Account } from '@prisma/generated/client';
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../infra/prisma/prisma.service";
+import { Account } from "@prisma/generated/client";
 import {
   AccountCreateInput,
   AccountUpdateInput,
-} from '@prisma/generated/models';
+} from "@prisma/generated/models";
 
 @Injectable()
 export class AuthRepo {

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { RedisService } from '../../infra/redis/redis.service';
-import * as crypto from 'crypto';
-import { Logger } from '@nestjs/common';
-import { RpcException } from '@nestjs/microservices';
-import { RpcStatus } from '@ticket_for_cinema/common';
+import { Injectable } from "@nestjs/common";
+import { RedisService } from "../../infra/redis/redis.service";
+import * as crypto from "crypto";
+import { Logger } from "@nestjs/common";
+import { RpcException } from "@nestjs/microservices";
+import { RpcStatus } from "@ticket_for_cinema/common";
 
-type OtpType = 'phone' | 'email';
+type OtpType = "phone" | "email";
 
 @Injectable()
 export class OtpService {
@@ -20,7 +20,7 @@ export class OtpService {
   ): Promise<{ code: string }> {
     const { code, hash } = this.generateCode();
 
-    await this.redisService.set(`otp:${type}:${identifier}`, hash, 'EX', 300);
+    await this.redisService.set(`otp:${type}:${identifier}`, hash, "EX", 300);
 
     this.logger.log(`OTP ${code} stored for ${type}:${identifier}`);
 
@@ -29,7 +29,7 @@ export class OtpService {
 
   private generateCode(): { code: string; hash: string } {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const hash = crypto.createHash('sha256').update(code).digest('hex');
+    const hash = crypto.createHash("sha256").update(code).digest("hex");
     this.logger.log(`Generated OTP: ${code}, Hash: ${hash}`);
     return { code, hash };
   }
@@ -39,16 +39,16 @@ export class OtpService {
     if (!storedHash) {
       throw new RpcException({
         code: RpcStatus.NOT_FOUND,
-        message: 'Invalid or expired code',
+        message: "Invalid or expired code",
       });
     }
 
-    const inputHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const inputHash = crypto.createHash("sha256").update(otp).digest("hex");
 
     if (inputHash !== storedHash) {
       throw new RpcException({
         code: RpcStatus.NOT_FOUND,
-        message: 'Invalid or expired code',
+        message: "Invalid or expired code",
       });
     } else {
       await this.redisService.del(`otp:${type}:${identifier}`);
