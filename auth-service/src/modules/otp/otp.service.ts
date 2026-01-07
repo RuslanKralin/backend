@@ -16,7 +16,7 @@ export class OtpService {
   public async sendOtp(
     identifier: string,
     // eslint-disable-next-line prettier/prettier
-    type: OtpType,
+    type: OtpType
   ): Promise<{ code: string }> {
     const { code, hash } = this.generateCode();
 

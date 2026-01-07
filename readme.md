@@ -96,3 +96,56 @@
 
     это триггер для комита
     git commit --allow-empty -m "trigger: test with new commit"
+
+### 12. Собственная система токенов (Passport Token)
+
+**Зачем:** Создать простую и безопасную систему токенов без зависимостей от JWT библиотек.
+**Что сделали:**
+
+- Создали пакет `passport` с собственной системой генерации и проверки токенов
+- Токен состоит из 4 частей: `userId.iat.exp.signature`
+- **userId** - ID пользователя в base64Url
+- **iat** - время создания в timestamp (base64Url)
+- **exp** - время истечения в timestamp (base64Url)
+- **signature** - HMAC подпись от объединенных данных
+
+**Как работает:**
+
+```typescript
+// Генерация токена
+const token = generateToken(secretKey, userId, ttlInSeconds);
+// Результат: dXNlcklkLWFzZGFzYXNk.MTc2Nzc5NDM0Ng.MTc2Nzc5Nzk0Ng.6y8wzZbBlK2I6L0mSkXyjyr/XnGniFnczW9zcjh7Eas=
+
+// Проверка токена
+const result = verifyToken(secretKey, token);
+// Результат: { valid: true, userId: 'userId-asdasasd' }
+```
+
+**Безопасность:**
+
+- HMAC подпись с секретным ключом - нельзя подделать
+- `constantTimeEqual` - защита от timing attacks
+- Проверка срока действия - токены автоматически истекают
+- Base64Url кодировка - безопасно для URL
+
+**Структура файлов:**
+
+```
+passport/lib/
+├── index.ts          # основные функции generateToken/verifyToken
+├── utils/
+│   ├── base64.ts     # base64UrlEncode/Decode для URL-безопасности
+│   └── crypto.ts     # constantTimeEqual для защиты от атак
+```
+
+**Преимущества перед JWT:**
+
+- ✅ Полный контроль над форматом и логикой
+- ✅ Меньше зависимостей (только Node.js crypto)
+- ✅ Простая отладка - все части токена читаемы
+- ✅ Легко расширить дополнительными полями
+- ✅ Быстрее чем стандартные JWT библиотеки
+
+### 13. Динамический модуль
+
+yarn add @nestjs/common @nestjs/core reflect-metadata txjs
