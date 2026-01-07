@@ -1,17 +1,17 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { MicroserviceOptions, Transport } from "@nestjs/microservices";
 import { ConfigService } from "@nestjs/config";
 import { AllConfig } from "./config/interfaces/all-config.interface";
+import { createGrpcServer } from "./infra/grpc/grpc.server";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Получаем ConfigService с типизацией
-  const configService = app.get<ConfigService<AllConfig>>(ConfigService);
+  const config = app.get<ConfigService<AllConfig>>(ConfigService);
 
   // Доступ к конфигурации с проверкой типов
-  const grpcConfig = configService.get<AllConfig["grpc"]>("grpc", {
+  const grpcConfig = config.get<AllConfig["grpc"]>("grpc", {
     infer: true,
   });
 
@@ -19,25 +19,9 @@ async function bootstrap() {
     throw new Error("Конфигурация gRPC не найдена");
   }
 
-  const url = `${grpcConfig.GRPC_HOST}:${grpcConfig.GRPC_PORT}`;
+  // Создаем gRPC сервер
+  await createGrpcServer(app, config);
 
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.GRPC,
-    options: {
-      package: "auth.v1",
-      protoPath: "node_modules/@ticket_for_cinema/contracts/proto/auth.proto",
-      url,
-      loader: {
-        keepCase: false,
-        longs: String,
-        enums: String,
-        defaults: true,
-        oneofs: true,
-      },
-    },
-  });
-
-  await app.startAllMicroservices();
   await app.init();
 }
 
