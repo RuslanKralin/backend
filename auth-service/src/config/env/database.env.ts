@@ -1,9 +1,9 @@
-import { registerAs } from "@nestjs/config";
-import type { DatabaseConfig } from "../interfaces";
-import { validateEnv } from "../../shared/utils";
-import { DatabaseValidator } from "../validators";
+import { registerAs } from '@nestjs/config';
+import type { DatabaseConfig } from '../interfaces';
+import { validateEnv } from '../../shared/utils';
+import { DatabaseValidator } from '../validators';
 
-export const databaseEnv = registerAs<DatabaseConfig>("database", () => {
+export const databaseEnv = registerAs<DatabaseConfig>('database', () => {
   validateEnv(process.env, DatabaseValidator);
   return {
     user: process.env.DATABASE_USER,
