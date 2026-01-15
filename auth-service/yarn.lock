@@ -1050,7 +1050,7 @@
     webpack "5.103.0"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^11.0.1":
+"@nestjs/common@^11.0.1", "@nestjs/common@^11.1.11":
   version "11.1.11"
   resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-11.1.11.tgz#7ab20a2c91c4c2c43794bfc92177121d0a946ce5"
   integrity sha512-R/+A8XFqLgN8zNs2twhrOaE7dJbRQhdPX3g46am4RT/x8xGLqDphrXkUIno4cGUZHxbczChBAaAPTdPv73wDZA==
@@ -1070,7 +1070,7 @@
     dotenv-expand "12.0.1"
     lodash "4.17.21"
 
-"@nestjs/core@^11.0.1":
+"@nestjs/core@^11.0.1", "@nestjs/core@^11.1.11":
   version "11.1.11"
   resolved "https://registry.yarnpkg.com/@nestjs/core/-/core-11.1.11.tgz#9eae7e488c45a443685567c1555ae3cd739d12fe"
   integrity sha512-H9i+zT3RvHi7tDc+lCmWHJ3ustXveABCr+Vcpl96dNOxgmrx4elQSTC4W93Mlav2opfLV+p0UTHY6L+bpUA4zA==
@@ -1368,6 +1368,16 @@
   integrity sha512-9SWa2rtXWh7dONxD2/W7IsvkMFzWrARgqMAiKJL4boCCUvfQmTZrfqrGb6AmByFbXgBc8AXCSsXMuLz8yzYUxg==
   dependencies:
     "@trivago/prettier-plugin-sort-imports" "^5.2.2"
+
+"@ticket_for_cinema/passport@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@ticket_for_cinema/passport/-/passport-1.0.0.tgz#406eecb075d1d3be1f8a63080a8def42ee661732"
+  integrity sha512-YylremVuNAIUQChul60/J+SEshQtGsrhavuNULhMRvSpgYdRYV5DO8ZG4BJvD4Hw4IodM61AfajWB0bE4BKCjg==
+  dependencies:
+    "@nestjs/common" "^11.1.11"
+    "@nestjs/core" "^11.1.11"
+    reflect-metadata "^0.2.2"
+    txjs "^0.1.1"
 
 "@tokenizer/inflate@^0.4.1":
   version "0.4.1"
@@ -5527,6 +5537,11 @@ tslib@2.8.1, tslib@^2.1.0, tslib@^2.4.0:
   version "2.8.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.8.1.tgz#612efe4ed235d567e8aba5f2a5fab70280ade83f"
   integrity sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==
+
+txjs@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/txjs/-/txjs-0.1.1.tgz#4374cc568fc771f8a75aa29ed7e95b35cb2202a1"
+  integrity sha512-rZNaL5/xixAdNh6nUGHWrfDxCkCtqAWECcbKuIgSiEyRYAc0yW5zIpiE5Sum9yQrR4E9jKkAykcQ+3CuwX8LvA==
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"

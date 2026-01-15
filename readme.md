@@ -149,3 +149,15 @@ passport/lib/
 ### 13. Динамический модуль
 
 yarn add @nestjs/common @nestjs/core reflect-metadata txjs
+после создания я его подключил в auth-service и теперь там генерируются access и refresh токены методами из моего пакета passport который я опубликовал в npm
+
+### 14. Установка refresh токена в куки на gateway service
+
+yarn add cookie-parser
+yarn add -D @types/cookie-parser
+также устанавливаем COOKIES_SECRET в .env чтоб не подминили куки
+используем const { access_token, refresh_token } = await lastValueFrom(
+this.authGrpcClient.verifyOtp(dto)
+)
+
+после реализация обновления токена
