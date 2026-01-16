@@ -1,7 +1,9 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 import { ClientGrpc } from '@nestjs/microservices'
-import {
+import type {
 	AuthServiceClient,
+	RefreshTokensRequest,
+	RefreshTokensResponse,
 	SendOtpRequest,
 	SendOtpResponse,
 	VerifyOtpRequest,
@@ -39,6 +41,19 @@ export class AuthGrpcClient implements OnModuleInit {
 	public async verifyOtp(data: VerifyOtpRequest): Promise<VerifyOtpResponse> {
 		return lastValueFrom(
 			this.authClient.verifyOtp(data).pipe(
+				catchError(error => {
+					// Преобразуем gRPC ошибку в RpcException чтобы фильтр её поймал
+					return throwError(() => error)
+				})
+			)
+		)
+	}
+
+	public async refreshTokens(
+		data: RefreshTokensRequest
+	): Promise<RefreshTokensResponse> {
+		return lastValueFrom(
+			this.authClient.refreshTokens(data).pipe(
 				catchError(error => {
 					// Преобразуем gRPC ошибку в RpcException чтобы фильтр её поймал
 					return throwError(() => error)

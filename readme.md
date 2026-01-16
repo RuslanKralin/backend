@@ -153,11 +153,50 @@ yarn add @nestjs/common @nestjs/core reflect-metadata txjs
 
 ### 14. Установка refresh токена в куки на gateway service
 
+```bash
 yarn add cookie-parser
 yarn add -D @types/cookie-parser
-также устанавливаем COOKIES_SECRET в .env чтоб не подминили куки
-используем const { access_token, refresh_token } = await lastValueFrom(
-this.authGrpcClient.verifyOtp(dto)
-)
+```
 
-после реализация обновления токена
+**Настройка защиты куки:**
+1. `httpOnly: true` - защита от XSS атак (скрипт не может прочитать куки)
+2. `secure: true` (в production) - передача куки только по HTTPS
+3. `sameSite: 'lax'` - защита от CSRF атак
+4. `domain: configService.get('COOKIES_DOMAIN')` - ограничение домена
+5. `maxAge: 30 дней` - время жизни refresh токена
+6. `signed: true` с COOKIES_SECRET - защита от подмены куки
+
+**Пример кода:**
+```typescript
+res.cookie('refreshToken', refreshToken, {
+  httpOnly: true,     // Защита от XSS
+  secure: process.env.NODE_ENV === 'production', // Только HTTPS в продакшене
+  sameSite: 'lax',    // Защита от CSRF
+  domain: configService.get('COOKIES_DOMAIN'),
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
+  signed: true        // Подпись куки
+});
+```
+
+**Кратко об атаках:**
+- **XSS (Cross-Site Scripting)**: Вредоносный код на странице.
+  *Защита:* `httpOnly` блокирует доступ JavaScript к куки.
+  
+- **CSRF (Cross-Site Request Forgery)**: Подмена запросов с других сайтов.
+  *Защита:* `sameSite: 'lax'` ограничивает отправку кук.
+
+- **Подмена кук**: Изменение значений кук.
+  *Защита:* `signed: true` с COOKIES_SECRET.
+
+- **Перехват кук**: В открытой сети.
+  *Защита:* `secure: true` (HTTPS).
+
+- **Утечка на поддоменах**:
+  *Защита:* Ограничение `domain`.
+
+### 15. Обновление токенов
+1. нужно изменить контракты в contracts (auth.proto добаить метод обновления токенов) 
+После реализации обновления токена, мы получаем новую пару access/refresh токенов и обновляем куки с новым refresh токеном.
+
+### 16. logout
+очистка куки

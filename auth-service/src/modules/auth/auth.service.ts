@@ -1,32 +1,22 @@
-<<<<<<< HEAD
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { Account } from '@prisma/generated/client';
-=======
-/* eslint-disable prettier/prettier */
-import { Injectable } from "@nestjs/common";
-import { Account } from "@prisma/generated/client";
->>>>>>> 7c9850c (save)
+
 import type {
+  RefreshTokensRequest,
+  RefreshTokensResponse,
   SendOtpRequest,
   SendOtpResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
-<<<<<<< HEAD
 } from '@ticket_for_cinema/contracts/gen/auth';
 import { AuthRepo } from './auth.repo';
 import { OtpService } from '@/modules/otp/otp.service';
 import { RpcException } from '@nestjs/microservices';
 import { RpcStatus } from '@ticket_for_cinema/common';
-=======
-} from "@ticket_for_cinema/contracts/gen/auth";
-import { AuthRepo } from "./auth.repo";
-import { OtpService } from "@/modules/otp/otp.service";
-import { RpcException } from "@nestjs/microservices";
-import { RpcStatus } from "@ticket_for_cinema/common";
-import { PassportService, TokenPayload } from "@ticket_for_cinema/passport";
-import { ConfigService } from "@nestjs/config";
-import type { AllConfig } from "@/config";
->>>>>>> 7c9850c (save)
+import { PassportService, TokenPayload } from '@ticket_for_cinema/passport';
+import { ConfigService } from '@nestjs/config';
+import type { AllConfig } from '@/config';
 
 @Injectable()
 export class AuthService {
@@ -39,14 +29,14 @@ export class AuthService {
 
     private readonly otpService: OtpService,
 
-    private readonly passportService: PassportService
+    private readonly passportService: PassportService,
   ) {
-    this.ACCESS_TOKEN_TTL = this.configService.get("passport.accessTokenTtl", {
+    this.ACCESS_TOKEN_TTL = this.configService.get('passport.accessTokenTtl', {
       infer: true,
     });
     this.REFRESH_TOKEN_TTL = this.configService.get(
-      "passport.refreshTokenTtl",
-      { infer: true }
+      'passport.refreshTokenTtl',
+      { infer: true },
     );
   }
   public async sendOtp(data: SendOtpRequest): Promise<SendOtpResponse> {
@@ -66,11 +56,7 @@ export class AuthService {
 
     const code = await this.otpService.sendOtp(
       identifier,
-<<<<<<< HEAD
       type as 'phone' | 'email',
-=======
-      type as "phone" | "email"
->>>>>>> 7c9850c (save)
     );
 
     return {
@@ -85,11 +71,7 @@ export class AuthService {
     await this.otpService.verifyOtp(
       identifier,
       code,
-<<<<<<< HEAD
       type as 'phone' | 'email',
-=======
-      type as "phone" | "email"
->>>>>>> 7c9850c (save)
     );
 
     let account: Account | null;
@@ -111,10 +93,6 @@ export class AuthService {
     if (type === 'email' && !account.isEmailVerified) {
       await this.authRepo.updateAccount(account.id, { isEmailVerified: true });
     }
-<<<<<<< HEAD
-    return { accessToken: '123456', refreshToken: '987654' };
-=======
-
     return this.generateTokens(account.id);
   }
 
@@ -124,13 +102,28 @@ export class AuthService {
     };
     const accessToken = this.passportService.generateToken(
       String(payload.sub),
-      this.ACCESS_TOKEN_TTL
+      this.ACCESS_TOKEN_TTL,
     );
     const refreshToken = this.passportService.generateToken(
       String(payload.sub),
-      this.REFRESH_TOKEN_TTL
+      this.REFRESH_TOKEN_TTL,
     );
     return { accessToken, refreshToken };
->>>>>>> 7c9850c (save)
+  }
+
+  public async refreshTokens(
+    data: RefreshTokensRequest,
+  ): Promise<RefreshTokensResponse> {
+    const { refreshToken } = data;
+
+    const result = this.passportService.verifyToken(refreshToken);
+    if (!result.valid) {
+      throw new RpcException({
+        code: RpcStatus.UNAUTHENTICATED,
+        details: 'Invalid refresh token',
+      });
+    }
+
+    return this.generateTokens(result.userId);
   }
 }
