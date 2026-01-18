@@ -3,12 +3,12 @@ import {
   Logger,
   OnModuleDestroy,
   OnModuleInit,
-} from '@nestjs/common';
-import { PrismaClient } from '@prisma/generated/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+} from "@nestjs/common";
+import { PrismaClient } from "@prisma/generated/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-import type { AllConfig } from '@/config';
-import { ConfigService } from '@nestjs/config';
+import type { AllConfig } from "@/config";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class PrismaService
@@ -19,15 +19,15 @@ export class PrismaService
 
   constructor(configService: ConfigService<AllConfig>) {
     const adapter = new PrismaPg({
-      user: configService.get('database.user', { infer: true }),
-      password: configService.get('database.password', { infer: true }),
-      host: configService.get('database.host', { infer: true }),
-      port: configService.get('database.port', { infer: true }),
-      database: configService.get('database.name', { infer: true }),
+      user: configService.get("database.user", { infer: true }),
+      password: configService.get("database.password", { infer: true }),
+      host: configService.get("database.host", { infer: true }),
+      port: configService.get("database.port", { infer: true }),
+      database: configService.get("database.name", { infer: true }),
     });
     super({
       adapter,
-      log: ['error', 'warn'],
+      log: ["error", "warn"],
     });
   }
 
@@ -46,10 +46,10 @@ export class PrismaService
   }
 
   public async onModuleDestroy() {
-    this.logger.log('Closing database connection...');
+    this.logger.log("Closing database connection...");
     try {
       await this.$disconnect();
-      this.logger.log('Database connection closed');
+      this.logger.log("Database connection closed");
     } catch (error) {
       this.logger.error(`Failed to close database connection: ${error}`);
     }

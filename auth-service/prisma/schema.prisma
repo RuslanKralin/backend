@@ -18,8 +18,17 @@ model Account {
   isPhoneVerified Boolean @default(false) @map("is_phone_verified")
   isEmailVerified Boolean @default(false) @map("is_email_verified")
 
+  role Role @default(USER)
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   
   @@map("accounts") // указываем имя таблицы в бд
+}
+
+enum Role {
+  USER
+  ADMIN
+
+  @@map("roles")
 }
