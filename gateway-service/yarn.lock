@@ -957,10 +957,18 @@
   resolved "https://registry.yarnpkg.com/@ticket_for_cinema/common/-/common-1.0.0.tgz#1e64f47921e5a0fd030c747ab7d5e27a4130bb84"
   integrity sha512-5hNd0cBFYSzULcIZG7W6gIuzu1xGAIvJoDeWa3EOQMNdtzLNRflQRuj386LYS4lhsBtPJPHPSzHMqPT6VXiVKg==
 
-"@ticket_for_cinema/contracts@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@ticket_for_cinema/contracts/-/contracts-1.0.4.tgz#5e902ce960e2ae98e15ba92effdeec52ac47d78d"
-  integrity sha512-JQiwHLFYE0EfubLSMo58fRqHnmP+OcpbJ4h3krPqIKrrggcADEFvBBpiuj0Vu87TKXlrideV2eex6/nAVmrPDQ==
+"@ticket_for_cinema/contracts@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@ticket_for_cinema/contracts/-/contracts-1.0.5.tgz#53b20abaa4a69f53e59d5cb3587bc80db7988a3d"
+  integrity sha512-soMpOEBdSe2SN2DujRsFCQFCE4CtCTML1YkDzgy+e/cFeaaAbbcgv/gi8XbyT/mjPMG9j2p1SFKXCaXk/uyYhw==
+  dependencies:
+    "@nestjs/microservices" "^11.1.11"
+    rxjs "^7.8.2"
+
+"@ticket_for_cinema/contracts@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@ticket_for_cinema/contracts/-/contracts-1.0.7.tgz#8409e46a655feb562df503018fbf1be0a339df28"
+  integrity sha512-Tem+8TdjSRXGVw3PMxFP4hgVeiEplUzGpYrDlIMN0qC2GHWVPhmMW4gyAkCBU29RofiNn7sUFDqrmW6xllvJxg==
   dependencies:
     "@nestjs/microservices" "^11.1.11"
     rxjs "^7.8.2"

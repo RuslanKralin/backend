@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ClientsModule, Transport } from '@nestjs/microservices'
-import { PROTO_PATH } from '@ticket_for_cinema/contracts'
+import { PROTO_PATH } from '@ticket_for_cinema/contracts/'
+import { PassportModule } from '@ticket_for_cinema/passport'
+import { AuthGuard } from 'src/shared/guards'
 
 import { AuthController } from './auth.controller'
 import { AuthGrpcClient } from './auth.grpc'
@@ -21,9 +23,15 @@ import { AuthGrpcClient } from './auth.grpc'
 				}),
 				inject: [ConfigService]
 			}
-		])
+		]),
+		PassportModule.registerAsync({
+			useFactory: (config: ConfigService) => ({
+				secretKey: config.getOrThrow<string>('PASSPORT_SECRET_KEY')
+			}),
+			inject: [ConfigService]
+		})
 	],
 	controllers: [AuthController],
-	providers: [AuthGrpcClient]
+	providers: [AuthGrpcClient, AuthGuard]
 })
 export class AuthModule {}

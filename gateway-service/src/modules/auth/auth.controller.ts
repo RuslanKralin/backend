@@ -1,11 +1,27 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common'
+import {
+	Body,
+	Controller,
+	Get,
+	HttpCode,
+	Post,
+	Req,
+	Res,
+	UseGuards
+} from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ApiOperation } from '@nestjs/swagger'
-// import type { RefreshTokensRequest } from '@ticket_for_cinema/contracts/gen/auth'
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
+import { Role } from '@ticket_for_cinema/contracts/gen/account'
 import type { Request, Response } from 'express'
+import { CurrentUserId, Protected } from 'src/shared/decorators'
+import { AuthGuard } from 'src/shared/guards'
 
 import { AuthGrpcClient } from './auth.grpc'
 import { SendOtpRequest, VerifyOtpRequest } from './dto'
+
+// добавляем user в Request временно
+interface RequestWithUser extends Request {
+	user: { id: string }
+}
 
 @Controller('auth')
 export class AuthController {
@@ -102,5 +118,13 @@ export class AuthController {
 			expires: new Date(0)
 		})
 		return { ok: true }
+	}
+
+	@ApiBearerAuth()
+	@Protected()
+	@Get('profile')
+	@HttpCode(200)
+	public async profile(@CurrentUserId() userId: string) {
+		return { id: userId }
 	}
 }

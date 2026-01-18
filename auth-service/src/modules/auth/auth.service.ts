@@ -8,7 +8,7 @@ import type {
   SendOtpResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
-} from "@ticket_for_cinema/contracts/gen/auth";
+} from "@ticket_for_cinema/contracts/dist/gen/auth";
 import { AuthRepo } from "./auth.repo";
 import { OtpService } from "@/modules/otp/otp.service";
 import { RpcException } from "@nestjs/microservices";

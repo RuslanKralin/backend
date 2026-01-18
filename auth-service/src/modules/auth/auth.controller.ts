@@ -8,7 +8,7 @@ import type {
   SendOtpResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
-} from "@ticket_for_cinema/contracts/gen/auth";
+} from "@ticket_for_cinema/contracts/dist/gen/auth";
 
 @Controller()
 export class AuthController {
@@ -28,6 +28,7 @@ export class AuthController {
   public async refreshTokens(
     data: RefreshTokensRequest,
   ): Promise<RefreshTokensResponse> {
+    // eslint-disable-next-line @typescript-eslint/await-thenable
     return await this.authService.refreshTokens(data);
   }
 }

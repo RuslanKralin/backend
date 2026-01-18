@@ -3,7 +3,7 @@ import { AccountService } from "./account.service";
 import type {
   GetAccountRequest,
   GetAccountResponse,
-} from "@ticket_for_cinema/contracts/gen/account";
+} from "@ticket_for_cinema/contracts/dist/gen/account";
 import { GrpcMethod } from "@nestjs/microservices";
 
 @Controller()

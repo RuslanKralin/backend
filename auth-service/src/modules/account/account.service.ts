@@ -2,8 +2,8 @@ import { Injectable } from "@nestjs/common";
 import type {
   GetAccountRequest,
   GetAccountResponse,
-} from "@ticket_for_cinema/contracts/gen/account";
-import { Role } from "@ticket_for_cinema/contracts/gen/account";
+} from "@ticket_for_cinema/contracts/dist/gen/account";
+import { Role } from "@ticket_for_cinema/contracts/dist/gen/account";
 import { AccountRepo } from "./account.repo";
 import { RpcException } from "@nestjs/microservices";
 import { RpcStatus, convertEnum } from "@ticket_for_cinema/common";
@@ -15,7 +15,6 @@ export class AccountService {
   public async getAccount(
     data: GetAccountRequest,
   ): Promise<GetAccountResponse> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const account = await this.accountRepo.findUserById(data.id);
     if (!account)
       throw new RpcException({

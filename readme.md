@@ -159,6 +159,7 @@ yarn add -D @types/cookie-parser
 ```
 
 **Настройка защиты куки:**
+
 1. `httpOnly: true` - защита от XSS атак (скрипт не может прочитать куки)
 2. `secure: true` (в production) - передача куки только по HTTPS
 3. `sameSite: 'lax'` - защита от CSRF атак
@@ -167,39 +168,47 @@ yarn add -D @types/cookie-parser
 6. `signed: true` с COOKIES_SECRET - защита от подмены куки
 
 **Пример кода:**
+
 ```typescript
-res.cookie('refreshToken', refreshToken, {
-  httpOnly: true,     // Защита от XSS
-  secure: process.env.NODE_ENV === 'production', // Только HTTPS в продакшене
-  sameSite: 'lax',    // Защита от CSRF
-  domain: configService.get('COOKIES_DOMAIN'),
+res.cookie("refreshToken", refreshToken, {
+  httpOnly: true, // Защита от XSS
+  secure: process.env.NODE_ENV === "production", // Только HTTPS в продакшене
+  sameSite: "lax", // Защита от CSRF
+  domain: configService.get("COOKIES_DOMAIN"),
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 дней
-  signed: true        // Подпись куки
+  signed: true, // Подпись куки
 });
 ```
 
 **Кратко об атаках:**
+
 - **XSS (Cross-Site Scripting)**: Вредоносный код на странице.
-  *Защита:* `httpOnly` блокирует доступ JavaScript к куки.
-  
+  _Защита:_ `httpOnly` блокирует доступ JavaScript к куки.
 - **CSRF (Cross-Site Request Forgery)**: Подмена запросов с других сайтов.
-  *Защита:* `sameSite: 'lax'` ограничивает отправку кук.
+  _Защита:_ `sameSite: 'lax'` ограничивает отправку кук.
 
 - **Подмена кук**: Изменение значений кук.
-  *Защита:* `signed: true` с COOKIES_SECRET.
+  _Защита:_ `signed: true` с COOKIES_SECRET.
 
 - **Перехват кук**: В открытой сети.
-  *Защита:* `secure: true` (HTTPS).
+  _Защита:_ `secure: true` (HTTPS).
 
 - **Утечка на поддоменах**:
-  *Защита:* Ограничение `domain`.
+  _Защита:_ Ограничение `domain`.
 
 ### 15. Обновление токенов
-1. нужно изменить контракты в contracts (auth.proto добаить метод обновления токенов) 
-После реализации обновления токена, мы получаем новую пару access/refresh токенов и обновляем куки с новым refresh токеном.
+
+1. нужно изменить контракты в contracts (auth.proto добаить метод обновления токенов)
+   После реализации обновления токена, мы получаем новую пару access/refresh токенов и обновляем куки с новым refresh токеном.
 
 ### 16. logout
+
 очистка куки
 
 ### 17. Реализация guards и decorators для защиты эндпоинтов где нужна авторизация
-тут мы соблюдаем SRP и не пихаем их в нашу библиотеку passport (она только создает токен, проверяет и возвращает userId, подписывает, декодирует, проверяет что он не подделан )
+
+тут мы соблюдаем SRP и не пихаем их в нашу библиотеку passport (она только создает токен, проверяет и возвращает userId, подписывает, декодирует, проверяет что он не подделан ), наши все эти штуки распологаются чисто в gateway. Guard отвечает за проверку токена и возвращает userId, decorator отвечает за извлечение userId из запроса (внутри себя он использует этот же guard)
+
+### 18. Добавляем поле к user дополнительно + role.
+
+Роль нужна будет чтоб админ мог создавать сеансы, добавлять фильмы и т.п. Короче админский функционал

@@ -2,6 +2,7 @@ import {
 	ArgumentsHost,
 	Catch,
 	ExceptionFilter,
+	HttpException,
 	HttpStatus,
 	Logger
 } from '@nestjs/common'
@@ -21,8 +22,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 		let status = HttpStatus.INTERNAL_SERVER_ERROR
 		let message = 'Internal server error'
 
+		// Обрабатываем HttpException (включая UnauthorizedException)
+		if (exception instanceof HttpException) {
+			status = exception.getStatus()
+			const exceptionResponse = exception.getResponse()
+			message =
+				typeof exceptionResponse === 'string'
+					? exceptionResponse
+					: (exceptionResponse as any).message || exception.message
+		}
 		// Обрабатываем gRPC ошибки
-		if (exception?.message && typeof exception.message === 'string') {
+		else if (exception?.message && typeof exception.message === 'string') {
 			const grpcMatch = exception.message.match(
 				/^(\d+)\s+([^:]+):\s*(.*)$/
 			)
