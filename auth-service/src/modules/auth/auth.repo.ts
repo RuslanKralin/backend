@@ -12,19 +12,6 @@ export class AuthRepo {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  public async findUserByPhone(phone: string): Promise<Account | null> {
-    try {
-      return await this.prisma.account.findUnique({ where: { phone } });
-    } catch (error) {
-      this.logger.error(`Error finding user by phone: ${error}`);
-      throw error;
-    }
-  }
-
-  public async findUserByEmail(email: string): Promise<Account | null> {
-    return await this.prisma.account.findUnique({ where: { email } });
-  }
-
   public async createAccount(data: AccountCreateInput): Promise<Account> {
     return await this.prisma.account.create({ data });
   }

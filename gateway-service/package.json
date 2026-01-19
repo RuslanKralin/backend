@@ -30,7 +30,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^11.2.3",
     "@ticket_for_cinema/common": "^1.0.0",
-    "@ticket_for_cinema/contracts": "^1.0.7",
+    "@ticket_for_cinema/contracts": "^1.0.13",
     "@ticket_for_cinema/core": "^1.0.6",
     "@ticket_for_cinema/passport": "^1.0.0",
     "class-transformer": "^0.5.1",

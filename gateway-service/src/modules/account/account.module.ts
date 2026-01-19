@@ -11,13 +11,20 @@ import { AccountGrpcClient } from './account.grpc'
 	imports: [
 		ClientsModule.registerAsync([
 			{
-				name: 'AUTH_PACKAGE',
+				name: 'ACCOUNT_PACKAGE',
 				useFactory: (config: ConfigService) => ({
 					transport: Transport.GRPC,
 					options: {
-						package: 'account.v1', // то что указали в proto файле
-						protoPath: PROTO_PATH.ACCOUNT,
-						url: config.getOrThrow<string>('AUTH_GRPC_URL')
+						package: ['account.v1'],
+						protoPath: [PROTO_PATH.ACCOUNT],
+						url: config.getOrThrow<string>('AUTH_GRPC_URL'),
+						loader: {
+							keepCase: false,
+							longs: String,
+							enums: String,
+							defaults: true,
+							oneofs: true
+						}
 					}
 				}),
 				inject: [ConfigService]
@@ -26,6 +33,6 @@ import { AccountGrpcClient } from './account.grpc'
 	],
 
 	providers: [AccountGrpcClient],
-	exports: [AccountGrpcClient]
+	exports: [AccountGrpcClient, ClientsModule]
 })
 export class AccountModule {}

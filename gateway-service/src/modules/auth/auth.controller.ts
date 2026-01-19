@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
-import { Role } from '@ticket_for_cinema/contracts/gen/account'
 import type { Request, Response } from 'express'
 import { CurrentUserId, Protected } from 'src/shared/decorators'
 import { AuthGuard } from 'src/shared/guards'
@@ -21,6 +20,11 @@ import { SendOtpRequest, VerifyOtpRequest } from './dto'
 // добавляем user в Request временно
 interface RequestWithUser extends Request {
 	user: { id: string }
+}
+
+enum Roles {
+	USER = 'USER',
+	ADMIN = 'ADMIN'
 }
 
 @Controller('auth')
@@ -118,13 +122,5 @@ export class AuthController {
 			expires: new Date(0)
 		})
 		return { ok: true }
-	}
-
-	@ApiBearerAuth()
-	@Protected()
-	@Get('profile')
-	@HttpCode(200)
-	public async profile(@CurrentUserId() userId: string) {
-		return { id: userId }
 	}
 }

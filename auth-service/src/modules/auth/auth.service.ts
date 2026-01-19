@@ -16,6 +16,7 @@ import { RpcStatus } from "@ticket_for_cinema/common";
 import { PassportService, TokenPayload } from "@ticket_for_cinema/passport";
 import { ConfigService } from "@nestjs/config";
 import type { AllConfig } from "@/config";
+import { UserRepo } from "@/shared/repositories";
 
 @Injectable()
 export class AuthService {
@@ -25,6 +26,7 @@ export class AuthService {
   constructor(
     private readonly configService: ConfigService<AllConfig>,
     private readonly authRepo: AuthRepo,
+    private readonly userRepo: UserRepo,
 
     private readonly otpService: OtpService,
 
@@ -42,9 +44,9 @@ export class AuthService {
     const { identifier, type } = data;
     let account: Account | null;
     if (type === "phone") {
-      account = await this.authRepo.findUserByPhone(identifier);
+      account = await this.userRepo.findUserByPhone(identifier);
     } else {
-      account = await this.authRepo.findUserByEmail(identifier);
+      account = await this.userRepo.findUserByEmail(identifier);
     }
     if (!account) {
       account = await this.authRepo.createAccount({
@@ -75,9 +77,9 @@ export class AuthService {
 
     let account: Account | null;
     if (type === "phone") {
-      account = await this.authRepo.findUserByPhone(identifier);
+      account = await this.userRepo.findUserByPhone(identifier);
     } else {
-      account = await this.authRepo.findUserByEmail(identifier);
+      account = await this.userRepo.findUserByEmail(identifier);
     }
 
     if (!account)

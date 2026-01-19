@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
 import { ClientGrpc } from '@nestjs/microservices'
 import {
 	AccountServiceClient,
@@ -9,19 +9,21 @@ import { lastValueFrom, throwError } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 
 @Injectable()
-export class AccountGrpcClient implements OnModuleInit {
+export class AccountGrpcClient {
 	// Приватный клиент для общения с account сервисом через gRPC
-	private accountService: AccountServiceClient
+	private accountService: AccountServiceClient | null = null
 
 	public constructor(
-		@Inject('AUTH_PACKAGE') private readonly client: ClientGrpc
+		@Inject('ACCOUNT_PACKAGE') private readonly client: ClientGrpc
 	) {}
 
-	// Этот метод вызывается автоматически когда модуль инициализируется
-	// Здесь мы получаем конкретный сервис AuthService из общего gRPC клиента
-	public onModuleInit() {
-		this.accountService =
-			this.client.getService<AccountServiceClient>('AccountService')
+	// Ленивая инициализация сервиса - получаем при первом вызове
+	private getAccountService(): AccountServiceClient {
+		if (!this.accountService) {
+			this.accountService =
+				this.client.getService<AccountServiceClient>('AccountService')
+		}
+		return this.accountService
 	}
 
 	// Метод для отправки OTP - это обертка над gRPC вызовом
@@ -31,6 +33,6 @@ export class AccountGrpcClient implements OnModuleInit {
 	): Promise<GetAccountResponse> {
 		// authClient.sendOtp(data) возвращает Observable (поток данных)
 		// lastValueFrom преобразует Observable в Promise для удобства использования
-		return lastValueFrom(this.accountService.getAccount(data))
+		return lastValueFrom(this.getAccountService().getAccount(data))
 	}
 }

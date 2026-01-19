@@ -20,6 +20,8 @@ model Account {
 
   role Role @default(USER)
 
+  pendingContactChanges PendingContactChange[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   
@@ -31,4 +33,22 @@ enum Role {
   ADMIN
 
   @@map("roles")
+}
+
+model PendingContactChange {
+  id String @id @default(nanoid())
+
+  type String  // "phone" или "email"
+  value String // новый номер телефона или email
+  codeHash String @map("code_hash") // хеш кода подтверждения
+  expiresAt DateTime @map("expires_at") // когда код истекает
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId String @map("account_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@map("pending_contact_changes") // указываем имя таблицы в бд
+  
 }
