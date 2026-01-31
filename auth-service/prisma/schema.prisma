@@ -20,7 +20,7 @@ model Account {
 
   role Role @default(USER)
 
-  pendingContactChanges PendingContactChange[]
+  pendingContactChanges PendingContactChange[] // связь с таблицей pending_contact_changes
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -43,12 +43,13 @@ model PendingContactChange {
   codeHash String @map("code_hash") // хеш кода подтверждения
   expiresAt DateTime @map("expires_at") // когда код истекает
 
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade) // связь с таблицей accounts
   accountId String @map("account_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   
+  @@unique([accountId, type]) // один pending на аккаунт, что логично ведь мы не можем менять контакт несколько раз в одно и то же время
   @@map("pending_contact_changes") // указываем имя таблицы в бд
   
 }

@@ -1,9 +1,12 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../prisma.service";
+import { Injectable, Logger } from "@nestjs/common";
+import { PrismaService } from "../../infra/prisma/prisma.service";
 import { Account } from "@prisma/generated/client";
+import type { AccountUpdateInput } from "@prisma/generated/models";
 
 @Injectable()
 export class UserRepo {
+  private readonly logger = new Logger(UserRepo.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   public async findUserByPhone(phone: string): Promise<Account | null> {
@@ -17,5 +20,12 @@ export class UserRepo {
 
   public async findUserByEmail(email: string): Promise<Account | null> {
     return await this.prisma.account.findUnique({ where: { email } });
+  }
+
+  public async updateAccount(
+    id: string,
+    data: AccountUpdateInput,
+  ): Promise<Account> {
+    return await this.prisma.account.update({ where: { id }, data });
   }
 }

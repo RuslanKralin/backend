@@ -42,3 +42,8 @@ export { Prisma }
  * 
  */
 export type Account = Prisma.AccountModel
+/**
+ * Model PendingContactChange
+ * 
+ */
+export type PendingContactChange = Prisma.PendingContactChangeModel

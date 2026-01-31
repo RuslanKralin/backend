@@ -10,11 +10,10 @@ import { ConfigService } from "@nestjs/config";
 
 import { getPassportConfig } from "@/config/loaders";
 import { UserRepo } from "@/shared/repositories";
-import { OtpService } from "../otp/otp.service";
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, AuthRepo, UserRepo, OtpService],
+  providers: [AuthService, AuthRepo, UserRepo],
   imports: [
     PrismaModule,
     OtpModule,

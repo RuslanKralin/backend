@@ -89,10 +89,10 @@ export class AuthService {
       });
 
     if (type === "phone" && !account.isPhoneVerified) {
-      await this.authRepo.updateAccount(account.id, { isPhoneVerified: true });
+      await this.userRepo.updateAccount(account.id, { isPhoneVerified: true });
     }
     if (type === "email" && !account.isEmailVerified) {
-      await this.authRepo.updateAccount(account.id, { isEmailVerified: true });
+      await this.userRepo.updateAccount(account.id, { isEmailVerified: true });
     }
     return this.generateTokens(account.id);
   }

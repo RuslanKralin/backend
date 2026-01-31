@@ -5,6 +5,7 @@ import { PROTO_PATH } from '@ticket_for_cinema/contracts'
 import { PassportModule } from '@ticket_for_cinema/passport'
 import { AuthGuard } from 'src/shared/guards'
 
+import { AccountController } from './account.controller'
 import { AccountGrpcClient } from './account.grpc'
 
 @Module({
@@ -33,6 +34,7 @@ import { AccountGrpcClient } from './account.grpc'
 	],
 
 	providers: [AccountGrpcClient],
-	exports: [AccountGrpcClient, ClientsModule]
+	exports: [AccountGrpcClient, ClientsModule],
+	controllers: [AccountController]
 })
 export class AccountModule {}

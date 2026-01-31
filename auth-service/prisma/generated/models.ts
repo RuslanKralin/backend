@@ -9,4 +9,5 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Account'
+export type * from './models/PendingContactChange'
 export type * from './commonInputTypes'

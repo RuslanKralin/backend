@@ -26,6 +26,8 @@ export class AuthGrpcClient implements OnModuleInit {
 	// Этот метод вызывается автоматически когда модуль инициализируется
 	// Здесь мы получаем конкретный сервис AuthService из общего gRPC клиента
 	public onModuleInit() {
+		// Используем короткое имя сервиса без префикса пакета
+		// proto-loader с keepCase: false регистрирует сервисы без пакета
 		this.authClient =
 			this.client.getService<AuthServiceClient>('AuthService')
 	}

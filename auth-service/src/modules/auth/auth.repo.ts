@@ -1,10 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "../../infra/prisma/prisma.service";
 import { Account } from "@prisma/generated/client";
-import {
-  AccountCreateInput,
-  AccountUpdateInput,
-} from "@prisma/generated/models";
+import { AccountCreateInput } from "@prisma/generated/models";
 
 @Injectable()
 export class AuthRepo {
@@ -14,12 +11,5 @@ export class AuthRepo {
 
   public async createAccount(data: AccountCreateInput): Promise<Account> {
     return await this.prisma.account.create({ data });
-  }
-
-  public async updateAccount(
-    id: string,
-    data: AccountUpdateInput,
-  ): Promise<Account> {
-    return await this.prisma.account.update({ where: { id }, data });
   }
 }

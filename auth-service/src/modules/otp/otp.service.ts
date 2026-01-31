@@ -16,14 +16,14 @@ export class OtpService {
   public async sendOtp(
     identifier: string,
     type: OtpType,
-  ): Promise<{ code: string }> {
+  ): Promise<{ code: string; hash: string }> {
     const { code, hash } = this.generateCode();
 
     await this.redisService.set(`otp:${type}:${identifier}`, hash, "EX", 300);
 
     this.logger.log(`OTP ${code} stored for ${type}:${identifier}`);
 
-    return { code };
+    return { code, hash };
   }
 
   private generateCode(): { code: string; hash: string } {

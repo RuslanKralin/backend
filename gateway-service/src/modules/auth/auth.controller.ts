@@ -123,4 +123,12 @@ export class AuthController {
 		})
 		return { ok: true }
 	}
+
+	@ApiBearerAuth()
+	@Protected('ADMIN')
+	@Get('account')
+	@HttpCode(200)
+	public async getAccount(@CurrentUserId() userId: string) {
+		return { id: userId }
+	}
 }

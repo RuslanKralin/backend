@@ -31,7 +31,7 @@
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@ticket_for_cinema/common": "^1.0.1",
-    "@ticket_for_cinema/contracts": "^1.0.14",
+    "@ticket_for_cinema/contracts": "^1.0.18",
     "@ticket_for_cinema/core": "^1.0.6",
     "@ticket_for_cinema/passport": "^1.0.0",
     "class-transformer": "^0.5.1",
