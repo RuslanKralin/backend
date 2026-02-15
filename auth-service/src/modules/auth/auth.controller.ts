@@ -1,18 +1,24 @@
+/* eslint-disable @typescript-eslint/await-thenable */
 import { Controller } from "@nestjs/common";
 import { AuthService } from "./auth.service";
+import { TelegramService } from "../telegram/telegram.service";
 import { GrpcMethod } from "@nestjs/microservices";
 import type {
   RefreshTokensRequest,
   RefreshTokensResponse,
   SendOtpRequest,
   SendOtpResponse,
+  TelegramInitResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
-} from "@ticket_for_cinema/contracts/dist/gen/auth";
+} from "@ticket_for_cinema/contracts/gen/auth";
 
 @Controller()
 export class AuthController {
-  public constructor(private readonly authService: AuthService) {}
+  public constructor(
+    private readonly authService: AuthService,
+    private readonly telegramService: TelegramService,
+  ) {}
 
   @GrpcMethod("AuthService", "SendOtp")
   public async sentOtp(data: SendOtpRequest): Promise<SendOtpResponse> {
@@ -28,7 +34,11 @@ export class AuthController {
   public async refreshTokens(
     data: RefreshTokensRequest,
   ): Promise<RefreshTokensResponse> {
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     return await this.authService.refreshTokens(data);
+  }
+
+  @GrpcMethod("AuthService", "TelegramInit")
+  public async telegramInit(): Promise<TelegramInitResponse> {
+    return await this.telegramService.getAuthUrl();
   }
 }

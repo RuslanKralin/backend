@@ -3,24 +3,15 @@ import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { PrismaModule } from "@/infra/prisma/prisma.module";
 import { AuthRepo } from "./auth.repo";
-import { OtpModule } from "@/modules/otp/otp.module";
-import { PassportModule } from "@ticket_for_cinema/passport";
-// import { passportEnv } from "@/config/env/passport.env";
-import { ConfigService } from "@nestjs/config";
 
-import { getPassportConfig } from "@/config/loaders";
+import { TelegramModule } from "@/modules/telegram/telegram.module";
 import { UserRepo } from "@/shared/repositories";
+import { TokenService } from "../token/token.service";
+import { OtpModule } from "../otp/otp.module";
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, AuthRepo, UserRepo],
-  imports: [
-    PrismaModule,
-    OtpModule,
-    PassportModule.registerAsync({
-      useFactory: getPassportConfig,
-      inject: [ConfigService],
-    }),
-  ],
+  providers: [AuthService, AuthRepo, UserRepo, TokenService],
+  imports: [PrismaModule, TelegramModule, OtpModule],
 })
 export class AuthModule {}

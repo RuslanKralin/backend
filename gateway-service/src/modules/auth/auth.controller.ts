@@ -3,9 +3,11 @@ import {
 	Controller,
 	Get,
 	HttpCode,
+	HttpStatus,
 	Post,
 	Req,
 	Res,
+	UnauthorizedException,
 	UseGuards
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -15,7 +17,7 @@ import { CurrentUserId, Protected } from 'src/shared/decorators'
 import { AuthGuard } from 'src/shared/guards'
 
 import { AuthGrpcClient } from './auth.grpc'
-import { SendOtpRequest, VerifyOtpRequest } from './dto'
+import { SendOtpRequest, TelegramVerifyRequest, VerifyOtpRequest } from './dto'
 
 // добавляем user в Request временно
 interface RequestWithUser extends Request {
@@ -130,5 +132,46 @@ export class AuthController {
 	@HttpCode(200)
 	public async getAccount(@CurrentUserId() userId: string) {
 		return { id: userId }
+	}
+
+	@Get('telegram')
+	@HttpCode(HttpStatus.OK)
+	public async telegramInit() {
+		return this.authGrpcClient.telegramInit()
+	}
+
+	@Post('telegram/veryfy')
+	@HttpCode(HttpStatus.OK)
+	public async telegramVerify(
+		@Body() dto: TelegramVerifyRequest,
+		@Res({ passthrough: true }) res: Response
+	) {
+		const query = JSON.parse(atob(dto.tgAuthResult))
+		console.log('Telegram query:', query)
+		const result = await this.authGrpcClient.telegramVerify({
+			query
+		})
+
+		if ('url' in result && result.url) {
+			return result
+		}
+
+		if (result.accessToken && result.refreshToken) {
+			const { accessToken, refreshToken } = result
+			res.cookie('refreshToken', refreshToken, {
+				httpOnly: true, // защита от доступа к куки через js (XSS атаки)
+				secure:
+					this.configService.getOrThrow<string>('NODE_ENV') ===
+					'development'
+						? false
+						: true,
+				domain: this.configService.getOrThrow<string>('COOKIES_DOMAIN'),
+				sameSite: 'lax', // защита от CSRF атак
+				maxAge: 30 * 24 * 60 * 60 * 1000
+			})
+			return { accessToken }
+		}
+
+		throw new UnauthorizedException('Telegram verify failed')
 	}
 }

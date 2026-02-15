@@ -6,6 +6,9 @@ import type {
 	RefreshTokensResponse,
 	SendOtpRequest,
 	SendOtpResponse,
+	TelegramInitResponse,
+	TelegramVerifyRequest,
+	TelegramVerifyResponse,
 	VerifyOtpRequest,
 	VerifyOtpResponse
 } from '@ticket_for_cinema/contracts/gen/auth'
@@ -62,5 +65,15 @@ export class AuthGrpcClient implements OnModuleInit {
 				})
 			)
 		)
+	}
+
+	public async telegramInit(): Promise<TelegramInitResponse> {
+		return lastValueFrom(this.authClient.telegramInit({}))
+	}
+
+	public async telegramVerify(
+		data: TelegramVerifyRequest
+	): Promise<TelegramVerifyResponse> {
+		return lastValueFrom(this.authClient.telegramVerify(data))
 	}
 }

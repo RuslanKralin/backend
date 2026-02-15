@@ -1355,9 +1355,9 @@
   integrity sha512-/XpaTP1pus2gBQaF4ZIryS2ujp2e5RarVG7J7N6eMqS8VUrXco0N9UV9jm8+l3/hxPp17lfMns532ySPEag+/g==
 
 "@ticket_for_cinema/contracts@^1.0.18":
-  version "1.0.18"
-  resolved "https://registry.yarnpkg.com/@ticket_for_cinema/contracts/-/contracts-1.0.18.tgz#95ba218e98d279a3e5e4957d00adc195f9d7b110"
-  integrity sha512-7MmRg4tzXXCudP5AQaa5/e4DGGNCGQ3ejEaOwy7cv2ncpo3mPXZ5v4TJR4v3juwXunZj2cwml2T4WRgYBHE7Hg==
+  version "1.0.23"
+  resolved "https://registry.yarnpkg.com/@ticket_for_cinema/contracts/-/contracts-1.0.23.tgz#9bf8a2c39f77a088af17ea81075d60667a0c0cc7"
+  integrity sha512-NC7osm2NEGEdXUJichCF1MHPwteZre6SUR5IZ8q78fnNvcj4WOeaEAqWu9+WyjInUv53UV1TpPsFrq4QEg0DPw==
   dependencies:
     "@nestjs/microservices" "^11.1.11"
     rxjs "^7.8.2"

@@ -13,33 +13,18 @@ import { AuthRepo } from "./auth.repo";
 import { OtpService } from "@/modules/otp/otp.service";
 import { RpcException } from "@nestjs/microservices";
 import { RpcStatus } from "@ticket_for_cinema/common";
-import { PassportService, TokenPayload } from "@ticket_for_cinema/passport";
-import { ConfigService } from "@nestjs/config";
-import type { AllConfig } from "@/config";
+
 import { UserRepo } from "@/shared/repositories";
+import { TokenService } from "../token/token.service";
 
 @Injectable()
 export class AuthService {
-  private readonly ACCESS_TOKEN_TTL: number;
-  private readonly REFRESH_TOKEN_TTL: number;
-
   constructor(
-    private readonly configService: ConfigService<AllConfig>,
     private readonly authRepo: AuthRepo,
     private readonly userRepo: UserRepo,
-
     private readonly otpService: OtpService,
-
-    private readonly passportService: PassportService,
-  ) {
-    this.ACCESS_TOKEN_TTL = this.configService.get("passport.accessTokenTtl", {
-      infer: true,
-    });
-    this.REFRESH_TOKEN_TTL = this.configService.get(
-      "passport.refreshTokenTtl",
-      { infer: true },
-    );
-  }
+    private readonly tokenService: TokenService,
+  ) {}
   public async sendOtp(data: SendOtpRequest): Promise<SendOtpResponse> {
     const { identifier, type } = data;
     let account: Account | null;
@@ -94,28 +79,13 @@ export class AuthService {
     if (type === "email" && !account.isEmailVerified) {
       await this.userRepo.updateAccount(account.id, { isEmailVerified: true });
     }
-    return this.generateTokens(account.id);
-  }
-
-  private generateTokens(userId: string) {
-    const payload: TokenPayload = {
-      sub: userId,
-    };
-    const accessToken = this.passportService.generateToken(
-      String(payload.sub),
-      this.ACCESS_TOKEN_TTL,
-    );
-    const refreshToken = this.passportService.generateToken(
-      String(payload.sub),
-      this.REFRESH_TOKEN_TTL,
-    );
-    return { accessToken, refreshToken };
+    return this.tokenService.generateTokens(account.id);
   }
 
   public refreshTokens(data: RefreshTokensRequest): RefreshTokensResponse {
     const { refreshToken } = data;
 
-    const result = this.passportService.verifyToken(refreshToken);
+    const result = this.tokenService.verify(refreshToken);
     if (!result.valid) {
       throw new RpcException({
         code: RpcStatus.UNAUTHENTICATED,
@@ -123,6 +93,6 @@ export class AuthService {
       });
     }
 
-    return this.generateTokens(result.userId);
+    return this.tokenService.generateTokens(result.userId);
   }
 }
