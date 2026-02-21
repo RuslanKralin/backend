@@ -13,11 +13,17 @@ import {
 import { ConfigService } from '@nestjs/config'
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger'
 import type { Request, Response } from 'express'
+import { lastValueFrom } from 'rxjs'
 import { CurrentUserId, Protected } from 'src/shared/decorators'
 import { AuthGuard } from 'src/shared/guards'
 
 import { AuthGrpcClient } from './auth.grpc'
-import { SendOtpRequest, TelegramVerifyRequest, VerifyOtpRequest } from './dto'
+import {
+	SendOtpRequest,
+	TelegramFinalizeRequest,
+	TelegramVerifyRequest,
+	VerifyOtpRequest
+} from './dto'
 
 // добавляем user в Request временно
 interface RequestWithUser extends Request {
@@ -173,5 +179,30 @@ export class AuthController {
 		}
 
 		throw new UnauthorizedException('Telegram verify failed')
+	}
+
+	@Post('telegram/finalize')
+	@HttpCode(HttpStatus.OK)
+	public async finalizeTelegramLogin(
+		@Body() dto: TelegramFinalizeRequest,
+		@Res({ passthrough: true }) res: Response
+	) {
+		const { sessionId } = dto
+
+		const { accessToken, refreshToken } =
+			await this.authGrpcClient.telegramConsume({ sessionId })
+
+		res.cookie('refreshToken', refreshToken, {
+			httpOnly: true, // защита от доступа к куки через js (XSS атаки)
+			secure:
+				this.configService.getOrThrow<string>('NODE_ENV') ===
+				'development'
+					? false
+					: true,
+			domain: this.configService.getOrThrow<string>('COOKIES_DOMAIN'),
+			sameSite: 'lax', // защита от CSRF атак
+			maxAge: 30 * 24 * 60 * 60 * 1000
+		})
+		return { accessToken }
 	}
 }

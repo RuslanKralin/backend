@@ -1,12 +1,16 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import type { AllConfig } from "@/config";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type {
+  TelegramCompleteRequest,
+  TelegramConsumeRequest,
   TelegramInitResponse,
   TelegramVerifyRequest,
 } from "@ticket_for_cinema/contracts/gen/auth";
 import { TelegramRepository } from "./telegram.repository";
 import { RedisService } from "@/infra/redis/redis.service";
+import { UserRepo } from "@/shared/repositories/user.repo";
 import { createHash, createHmac, randomBytes } from "crypto";
 import { TokenService } from "../token/token.service";
 import { RpcException } from "@nestjs/microservices";
@@ -23,6 +27,7 @@ export class TelegramService {
     private readonly redisService: RedisService,
     private readonly configService: ConfigService<AllConfig>,
     private readonly telegramRepository: TelegramRepository,
+    private readonly userRepo: UserRepo,
     private readonly tokenService: TokenService,
   ) {
     this.BOT_ID = this.configService.get("telegram.botId", { infer: true });
@@ -90,6 +95,55 @@ export class TelegramService {
     return { url: `http://t.me/${this.BOT_USERNAME}?start=${sessionId}` };
   }
 
+  public async complete(data: TelegramCompleteRequest) {
+    const { sessionId, phone } = data;
+    const raw = await this.redisService.get(`telegram_session:${sessionId}`);
+
+    if (!raw) {
+      throw new RpcException({
+        code: RpcStatus.NOT_FOUND,
+        message: "Invalid Telegram session",
+      });
+    }
+
+    const { telegramId } = JSON.parse(raw);
+
+    let existingUser = await this.userRepo.findUserByPhone(phone);
+    if (!existingUser) {
+      existingUser = await this.userRepo.createAccount({
+        phone,
+      });
+    }
+
+    await this.userRepo.updateAccount(existingUser.id, {
+      telegramId,
+      isPhoneVerified: true,
+    });
+    const tokens = this.tokenService.generateTokens(existingUser.id);
+    await this.redisService.set(
+      `telegram_tokens:${sessionId}`,
+      JSON.stringify(tokens),
+      "EX",
+      120,
+    );
+    await this.redisService.del(`telegram_session:${sessionId}`);
+    return { sessionId };
+  }
+
+  public async consumeSession(data: TelegramConsumeRequest) {
+    const { sessionId } = data;
+    const raw = await this.redisService.get(`telegram_tokens:${sessionId}`);
+    if (!raw) {
+      throw new RpcException({
+        code: RpcStatus.NOT_FOUND,
+        message: "Invalid Telegram session",
+      });
+    }
+    const tokens = JSON.parse(raw);
+
+    await this.redisService.del(`telegram_tokens:${sessionId}`);
+    return tokens;
+  }
   // TODO: разобраться с этим
   private checkTelegramAuth(query: Record<string, string>) {
     const hash = query.hash;
@@ -104,7 +158,7 @@ export class TelegramService {
     const dataCheckStr = dataCheckArr.join("\n");
     const secretKey = createHash("sha256")
       .update(`${this.BOT_ID}:${this.BOT_TOKEN}`)
-      .digest("hex");
+      .digest();
     const hmac = createHmac("sha256", secretKey)
       .update(dataCheckStr)
       .digest("hex");

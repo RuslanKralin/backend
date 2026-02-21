@@ -9,7 +9,7 @@ import type {
   VerifyOtpRequest,
   VerifyOtpResponse,
 } from "@ticket_for_cinema/contracts/dist/gen/auth";
-import { AuthRepo } from "./auth.repo";
+
 import { OtpService } from "@/modules/otp/otp.service";
 import { RpcException } from "@nestjs/microservices";
 import { RpcStatus } from "@ticket_for_cinema/common";
@@ -20,7 +20,6 @@ import { TokenService } from "../token/token.service";
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly authRepo: AuthRepo,
     private readonly userRepo: UserRepo,
     private readonly otpService: OtpService,
     private readonly tokenService: TokenService,
@@ -34,7 +33,7 @@ export class AuthService {
       account = await this.userRepo.findUserByEmail(identifier);
     }
     if (!account) {
-      account = await this.authRepo.createAccount({
+      account = await this.userRepo.createAccount({
         email: type === "email" ? identifier : undefined,
         phone: type === "phone" ? identifier : undefined,
       });

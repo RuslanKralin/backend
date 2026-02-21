@@ -220,4 +220,104 @@ res.cookie("refreshToken", refreshToken, {
 
 ### 20. Авторизация через телеграм
 
-1.
+#### Архитектура и компоненты
+
+1. **Обновление gRPC контрактов** (`contracts/proto/auth.proto`)
+   - Добавлены методы `TelegramInit` и `TelegramVerify` в `AuthService`
+   - `TelegramInitResponse` - возвращает URL для OAuth
+   - `TelegramVerifyRequest` - принимает `map<string, string>` с данными от Telegram
+   - `TelegramVerifyResponse` - использует `oneof` для возврата либо URL бота, либо токенов
+
+2. **Создание TokenService** (отдельный модуль для генерации токенов)
+   - **Причина выделения**: избежание циклических зависимостей между `AuthService` и `TelegramService`
+   - **Ответственность**: только генерация и верификация токенов через `PassportService`
+   - **Расположение**: `auth-service/src/modules/token/`
+   - **Зависимости**: `ConfigService` (для TTL), `PassportService` (для генерации)
+   - **Методы**:
+     - `generateTokens(userId)` - создает access и refresh токены
+     - `verify(token)` - проверяет валидность токена
+   - **Использование**: в `AuthService` и `TelegramService` для унифицированной генерации токенов
+
+3. **TelegramModule** (`auth-service/src/modules/telegram/`)
+   - **TelegramService**:
+     - `getAuthUrl()` - генерирует OAuth URL с параметрами (bot_id, origin, request_access, return_to)
+     - `verify(data)` - проверяет hash подпись от Telegram и обрабатывает авторизацию
+     - `checkTelegramAuth(query)` - криптографическая проверка подлинности данных через HMAC-SHA256
+   - **TelegramController**: gRPC контроллер с методами `TelegramInit` и `TelegramVerify`
+   - **TelegramRepository**: работа с БД для поиска пользователей по `telegramId`
+   - **Зависимости**: `RedisService`, `ConfigService`, `TokenService`
+
+4. **Обновление схемы БД** (`auth-service/prisma/schema.prisma`)
+   - Добавлено поле `telegramId String? @unique` в модель `Account`
+   - Поддержка множественных методов авторизации (email, phone, telegram)
+
+5. **Конфигурация Telegram** (`auth-service/src/config/`)
+   - `telegram.env.ts` - переменные окружения
+   - `telegram.interface.ts` - TypeScript интерфейс
+   - `telegram.validator.ts` - валидация конфигурации
+   - **Переменные**: `TELEGRAM_BOT_ID`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_REDIRECT_ORIGIN`
+
+6. **Gateway endpoints** (`gateway-service/src/modules/auth/`)
+   - `GET /auth/telegram` - получение OAuth URL
+   - `POST /auth/telegram/verify` - верификация данных от Telegram
+   - `TelegramVerifyRequest` DTO - принимает base64-закодированные данные (`tgAuthResult`)
+
+#### Процесс авторизации
+
+1. **Инициализация**:
+   - Клиент запрашивает `GET /auth/telegram`
+   - Gateway → Auth Service (gRPC) → TelegramService.getAuthUrl()
+   - Возвращается URL: `https://oauth.telegram.org/auth?bot_id=...&origin=...&request_access=write&return_to=...`
+
+2. **Редирект на Telegram**:
+   - Пользователь переходит по URL
+   - Telegram показывает окно подтверждения
+   - После согласия Telegram редиректит обратно с данными (id, username, first_name, hash, auth_date)
+
+3. **Верификация**:
+   - Клиент отправляет `POST /auth/telegram/verify` с base64-закодированными данными
+   - Gateway декодирует и передает в Auth Service
+   - TelegramService проверяет hash подпись (HMAC-SHA256)
+   - Если пользователь существует → генерируются токены
+   - Если новый пользователь → создается сессия в Redis и возвращается URL бота для дополнительной регистрации
+
+4. **Безопасность**:
+   - **Hash проверка**: данные от Telegram подписаны секретным ключом бота
+   - **Алгоритм**: SHA256(bot_token) → HMAC-SHA256(secret_key, data_check_string)
+   - **Защита от подделки**: невозможно создать валидный hash без bot_token
+
+#### Архитектурные решения
+
+1. **Разделение ответственности**:
+   - `TokenService` - только токены (избегаем циклических зависимостей)
+   - `TelegramService` - только Telegram OAuth логика
+   - `AuthService` - общая логика аутентификации
+
+2. **Модульная структура**:
+   - `TokenModule` экспортирует `TokenService`
+   - `TelegramModule` импортирует `TokenService` и экспортирует `TelegramService`
+   - `AuthModule` импортирует оба модуля
+
+3. **Providers vs Imports**:
+   - **Providers** - сервисы, которыми владеет модуль (AuthService, UserRepo)
+   - **Imports** - готовые модули с их сервисами (OtpModule, TelegramModule, TokenModule)
+   - **Правило**: модули в imports, сервисы в providers (нельзя смешивать)
+
+4. **Redis для сессий**:
+   - Хранение временных данных авторизации (telegram_session:sessionId)
+   - TTL 300 секунд (5 минут)
+   - Используется для связи OAuth flow с регистрацией через бота
+
+#### Гибридная система авторизации
+
+Теперь поддерживается 3 метода:
+
+- **Email + OTP** - классическая регистрация
+- **Phone + OTP** - регистрация по телефону
+- **Telegram OAuth** - мгновенная авторизация через Telegram
+
+Пользователь может:
+
+- Зарегистрироваться любым способом
+- Привязать несколько методов к одному аккаунту
+- Входить любым удобным способом

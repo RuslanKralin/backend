@@ -85,6 +85,7 @@
 URL - это адрес специальной страницы Telegram OAuth, где пользователь подтверждает, что разрешает вашему приложению получить его данные.
 
 ### **Компоненты URL:**
+
 ```typescript
 const url = new URL("https://oauth.telegram.org/auth");
 
@@ -110,21 +111,23 @@ url.searchParams.append("return_to", "https://yoursite.com");
 **Эндпоинт:** `GET /auth/telegram`
 
 **Что происходит:**
+
 ```typescript
 // telegram.service.ts
 public getAuthUrl(): TelegramInitResponse {
   const url = new URL("https://oauth.telegram.org/auth");
-  
+
   url.searchParams.append("bot_id", this.BOT_ID);
   url.searchParams.append("origin", this.REDIRECT_ORIGIN);
   url.searchParams.append("request_access", "write");
   url.searchParams.append("return_to", this.REDIRECT_ORIGIN);
-  
+
   return { url: url.href };
 }
 ```
 
 **Результат:**
+
 ```json
 {
   "url": "https://oauth.telegram.org/auth?bot_id=7955980190&origin=https%3A%2F%2Fyoursite.com&request_access=write&return_to=https%3A%2F%2Fyoursite.com"
@@ -136,6 +139,7 @@ public getAuthUrl(): TelegramInitResponse {
 ### **ШАГ 2: Пользователь переходит по ссылке**
 
 **Что видит пользователь:**
+
 ```
 ┌─────────────────────────────────────┐
 │   Telegram OAuth                    │
@@ -171,6 +175,7 @@ https://yoursite.com/telegram-callback?
 ```
 
 **Важные параметры:**
+
 - `id` - уникальный ID пользователя в Telegram
 - `first_name`, `last_name` - имя пользователя
 - `username` - @username в Telegram
@@ -187,19 +192,21 @@ https://yoursite.com/telegram-callback?
 **Что происходит в коде:**
 
 #### **4.1. Декодирование данных в Gateway:**
+
 ```typescript
 @Post('telegram/verify')
 public async telegramVerify(@Body() dto: TelegramVerifyRequest) {
   // Декодируем base64 и парсим JSON
   const query = JSON.parse(atob(dto.tgAuthResult));
   console.log('Telegram query:', query);
-  
+
   // Отправляем в Auth Service для верификации
   return this.authGrpcClient.telegramVerify({ query });
 }
 ```
 
 #### **4.2. Верификация в Auth Service:**
+
 ```typescript
 public async verifyAuth(query: Record<string, string>) {
   // 1. ПРОВЕРКА ПОДПИСИ (hash)
@@ -208,30 +215,30 @@ public async verifyAuth(query: Record<string, string>) {
     .sort()
     .map(key => `${key}=${query[key]}`)
     .join('\n');
-  
+
   const secretKey = crypto
     .createHash('sha256')
     .update(this.BOT_TOKEN)
     .digest();
-  
+
   const calculatedHash = crypto
     .createHmac('sha256', secretKey)
     .update(dataCheckString)
     .digest('hex');
-  
+
   if (calculatedHash !== query.hash) {
     throw new Error("Invalid hash - data is fake!");
   }
-  
+
   // 2. ПРОВЕРКА ВРЕМЕНИ (не старше 24 часов)
   const authDate = parseInt(query.auth_date);
   if (Date.now() / 1000 - authDate > 86400) {
     throw new Error("Auth data expired");
   }
-  
+
   // 3. ПОИСК ИЛИ СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ
   let user = await this.userRepo.findUserByTelegramId(query.id);
-  
+
   if (!user) {
     user = await this.userRepo.createAccount({
       telegramId: query.id,
@@ -242,11 +249,11 @@ public async verifyAuth(query: Record<string, string>) {
       role: 'USER'
     });
   }
-  
+
   // 4. ГЕНЕРАЦИЯ ТОКЕНОВ
-  const { accessToken, refreshToken } = 
+  const { accessToken, refreshToken } =
     await this.passportService.generateTokenPair(user.id);
-  
+
   return { accessToken, refreshToken, user };
 }
 ```
@@ -256,17 +263,25 @@ public async verifyAuth(query: Record<string, string>) {
 ## 🔐 Почему это безопасно?
 
 ### **1. Криптографическая подпись (hash)**
+
 - Telegram подписывает данные секретным ключом вашего бота
 - Вы проверяете эту подпись на своем сервере
 - Невозможно подделать данные без знания секретного ключа
 
 **Как работает подпись:**
+
 ```typescript
 // Telegram делает это на своей стороне:
-const hash = HMAC_SHA256(secret_key, "auth_date=1708012345\nfirst_name=John\nid=123456\nusername=john_doe");
+const hash = HMAC_SHA256(
+  secret_key,
+  "auth_date=1708012345\nfirst_name=John\nid=123456\nusername=john_doe",
+);
 
 // Вы делаете это на своей стороне:
-const calculatedHash = HMAC_SHA256(secret_key, "auth_date=1708012345\nfirst_name=John\nid=123456\nusername=john_doe");
+const calculatedHash = HMAC_SHA256(
+  secret_key,
+  "auth_date=1708012345\nfirst_name=John\nid=123456\nusername=john_doe",
+);
 
 // Сравниваем:
 if (calculatedHash === receivedHash) {
@@ -277,10 +292,12 @@ if (calculatedHash === receivedHash) {
 ```
 
 ### **2. Временная метка (auth_date)**
+
 - Данные действительны только 24 часа
 - Защита от replay атак (повторного использования старых данных)
 
 ### **3. Никаких паролей**
+
 - Пользователь не вводит пароль в вашем приложении
 - Telegram гарантирует, что это реальный пользователь
 
@@ -289,31 +306,35 @@ if (calculatedHash === receivedHash) {
 ## 📝 Структура данных
 
 ### **DTO для запроса верификации:**
+
 ```typescript
 export class TelegramVerifyRequest {
   @ApiProperty({
-    example: 'eyJpZCI6NTI1MzY2Nzk0LCJmaXJzdF9uYW1lIjoiUnVzbGFuIiwidXNlcm5hbWUiOi...'
+    example:
+      "eyJpZCI6NTI1MzY2Nzk0LCJmaXJzdF9uYW1lIjoiUnVzbGFuIiwidXNlcm5hbWUiOi...",
   })
   @IsString()
   @IsNotEmpty()
-  public tgAuthResult: string  // base64 закодированный JSON с query параметрами
+  public tgAuthResult: string; // base64 закодированный JSON с query параметрами
 }
 ```
 
 ### **Структура данных от Telegram:**
+
 ```typescript
 interface TelegramAuthData {
-  id: string;           // Уникальный ID пользователя
-  first_name: string;   // Имя
-  last_name?: string;   // Фамилия (опционально)
-  username?: string;    // @username (опционально)
-  photo_url?: string;   // URL аватара (опционально)
-  auth_date: string;    // Timestamp авторизации
-  hash: string;         // Криптографическая подпись
+  id: string; // Уникальный ID пользователя
+  first_name: string; // Имя
+  last_name?: string; // Фамилия (опционально)
+  username?: string; // @username (опционально)
+  photo_url?: string; // URL аватара (опционально)
+  auth_date: string; // Timestamp авторизации
+  hash: string; // Криптографическая подпись
 }
 ```
 
 ### **Структура ответа:**
+
 ```typescript
 interface TelegramVerifyResponse {
   accessToken: string;
@@ -325,7 +346,7 @@ interface TelegramVerifyResponse {
     firstName: string;
     lastName?: string;
     photoUrl?: string;
-    role: 'USER' | 'ADMIN';
+    role: "USER" | "ADMIN";
     createdAt: string;
     updatedAt: string;
   };
@@ -337,45 +358,46 @@ interface TelegramVerifyResponse {
 ## 💡 Практический пример использования на фронтенде
 
 ### **1. Инициация авторизации:**
+
 ```javascript
 // Получаем URL для Telegram OAuth
-const response = await fetch('/auth/telegram');
+const response = await fetch("/auth/telegram");
 const { url } = await response.json();
 
 // Открываем popup для авторизации
-const popup = window.open(url, 'telegram-auth', 'width=600,height=600');
+const popup = window.open(url, "telegram-auth", "width=600,height=600");
 ```
 
 ### **2. Обработка callback от Telegram:**
+
 ```javascript
 // Слушаем сообщения от popup окна
-window.addEventListener('message', async (event) => {
-  if (event.data.type === 'telegram-callback') {
+window.addEventListener("message", async (event) => {
+  if (event.data.type === "telegram-callback") {
     try {
       // Кодируем query параметры в base64
       const tgAuthResult = btoa(JSON.stringify(event.data.query));
-      
+
       // Отправляем на верификацию
-      const authResponse = await fetch('/auth/telegram/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tgAuthResult })
+      const authResponse = await fetch("/auth/telegram/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tgAuthResult }),
       });
-      
+
       const { accessToken, user } = await authResponse.json();
-      
+
       // Сохраняем токен и пользователь авторизован!
-      localStorage.setItem('accessToken', accessToken);
-      console.log('User authorized:', user);
-      
+      localStorage.setItem("accessToken", accessToken);
+      console.log("User authorized:", user);
+
       // Закрываем popup
       popup.close();
-      
+
       // Редирект на главную страницу
-      window.location.href = '/dashboard';
-      
+      window.location.href = "/dashboard";
     } catch (error) {
-      console.error('Telegram auth error:', error);
+      console.error("Telegram auth error:", error);
       popup.close();
     }
   }
@@ -383,18 +405,22 @@ window.addEventListener('message', async (event) => {
 ```
 
 ### **3. В popup окне (telegram-callback.html):**
+
 ```html
 <script>
   // Получаем query параметры из URL
   const query = new URLSearchParams(window.location.search);
   const queryObject = Object.fromEntries(query.entries());
-  
+
   // Отправляем данные в родительское окно
-  window.opener.postMessage({
-    type: 'telegram-callback',
-    query: queryObject
-  }, window.location.origin);
-  
+  window.opener.postMessage(
+    {
+      type: "telegram-callback",
+      query: queryObject,
+    },
+    window.location.origin,
+  );
+
   // Закрываем popup
   window.close();
 </script>
@@ -405,18 +431,22 @@ window.addEventListener('message', async (event) => {
 ## ⚠️ Возможные ошибки и их решение
 
 ### **1. Invalid hash - data is fake!**
+
 **Причина:** Подпись не совпадает
 **Решение:** Проверить правильность формирования dataCheckString и секретного ключа
 
 ### **2. Auth data expired**
+
 **Причина:** Данные старше 24 часов
 **Решение:** Пользователь должен заново авторизоваться
 
 ### **3. Bot token invalid**
+
 **Причина:** Неверный токен бота
 **Решение:** Проверить переменную окружения `TELEGRAM_BOT_TOKEN`
 
 ### **4. CORS ошибки**
+
 **Причина:** Popup не может отправить сообщение в родительское окно
 **Решение:** Убедиться, что `window.location.origin` совпадает
 
@@ -425,6 +455,7 @@ window.addEventListener('message', async (event) => {
 ## 🛠️ Настройка окружения
 
 ### **Переменные окружения:**
+
 ```env
 # Telegram Bot Settings
 TELEGRAM_BOT_ID=7955980190
@@ -434,6 +465,7 @@ TELEGRAM_REDIRECT_ORIGIN=https://yoursite.com
 ```
 
 ### **Создание Telegram бота:**
+
 1. Найдите @BotFather в Telegram
 2. Отправьте `/newbot`
 3. Следуйте инструкциям
@@ -459,12 +491,14 @@ TELEGRAM_REDIRECT_ORIGIN=https://yoursite.com
 ## 🎯 Преимущества Telegram OAuth
 
 ### **Для пользователя:**
+
 - ✅ Не нужно регистрироваться
 - ✅ Не нужно запоминать пароль
 - ✅ Один клик для авторизации
 - ✅ Доверие к Telegram
 
 ### **Для разработчика:**
+
 - ✅ Нет хранения паролей
 - ✅ Меньше кода для регистрации
 - ✅ Высокая безопасность
@@ -475,12 +509,15 @@ TELEGRAM_REDIRECT_ORIGIN=https://yoursite.com
 ## 🔄 Альтернативные сценарии
 
 ### **1. Привязка Telegram к существующему аккаунту:**
+
 ```typescript
 // Пользователь уже авторизован по email/phone
 // И хочет привязать Telegram для удобного входа
 
-POST /account/telegram/link
-Body: { tgAuthResult: "base64(...)" }
+POST / account / telegram / link;
+Body: {
+  tgAuthResult: "base64(...)";
+}
 
 // Логика:
 // 1. Верифицируем данные Telegram
@@ -490,6 +527,7 @@ Body: { tgAuthResult: "base64(...)" }
 ```
 
 ### **2. Вход через Telegram вместо email/phone:**
+
 ```typescript
 // Полная замена email/phone авторизации
 // Пользователь может войти только через Telegram
@@ -505,12 +543,411 @@ Body: { tgAuthResult: "base64(...)" }
 ## 📚 Дополнительные ресурсы
 
 ### **Официальная документация Telegram:**
-- [Telegram Bot API - Login](https://core.telegram.org/widgets/login)
-- [Telegram OAuth Documentation](https://core.telegram.org/api/oauth)
 
-### **Полезные статьи:**
-- [Implementing Telegram OAuth](https://medium.com/@username/implementing-telegram-oauth)
-- [Security best practices for OAuth](https://oauth.net/2/)
+---
+
+## 🔄 **Полный процесс авторизации через Telegram (пошагово)**
+
+### **Шаг 1: Инициализация авторизации (Frontend → Gateway → Auth)**
+
+**Что происходит:**
+
+1. Пользователь нажимает кнопку "Войти через Telegram" на фронтенде
+2. Frontend отправляет `GET /auth/telegram` на Gateway Service
+3. Gateway вызывает gRPC метод `TelegramInit()` в Auth Service
+4. Auth Service генерирует OAuth URL для Telegram
+
+**Код:**
+
+```typescript
+// gateway-service/src/modules/auth/auth.controller.ts:137-141
+@Get('telegram')
+public async telegramInit() {
+  return this.authGrpcClient.telegramInit()
+}
+
+// auth-service/src/modules/telegram/telegram.service.ts:44-62
+public getAuthUrl(): TelegramInitResponse {
+  const url = new URL(`https://oauth.telegram.org/auth`);
+  url.searchParams.append("bot_id", this.BOT_ID);
+  url.searchParams.append("origin", this.REDIRECT_ORIGIN);
+  url.searchParams.append("request_access", "write");
+  url.searchParams.append("return_to", this.REDIRECT_ORIGIN);
+  return { url: url.href };
+}
+```
+
+**Результат:** Frontend получает URL вида:
+
+```
+https://oauth.telegram.org/auth?bot_id=8415500619&origin=https://yoursite.com&request_access=write&return_to=https://yoursite.com
+```
+
+---
+
+### **Шаг 2: OAuth авторизация в Telegram**
+
+**Что происходит:**
+
+1. Frontend перенаправляет пользователя на полученный URL
+2. Пользователь открывает Telegram OAuth страницу
+3. Telegram показывает информацию о боте и запрашивает разрешение
+4. Пользователь подтверждает авторизацию
+5. Telegram возвращает пользователя на `return_to` URL с параметрами в hash
+
+**Параметры в URL hash:**
+
+```
+#tgAuthResult=base64({
+  id: "525366794",
+  first_name: "Ruslan",
+  username: "Ruslan_Kralin",
+  auth_date: "1771151026",
+  hash: "abc123..."
+})
+```
+
+---
+
+### **Шаг 3: Верификация Telegram данных (Frontend → Gateway → Auth)**
+
+**Что происходит:**
+
+1. Frontend извлекает `tgAuthResult` из URL hash
+2. Frontend отправляет `POST /auth/telegram/verify` с данными на Gateway
+3. Gateway декодирует base64 и отправляет данные в Auth Service
+4. Auth Service проверяет подлинность данных через HMAC
+
+**Код:**
+
+```typescript
+// gateway-service/src/modules/auth/auth.controller.ts:143-157
+@Post('telegram/veryfy')
+public async telegramVerify(@Body() dto: TelegramVerifyRequest) {
+  const query = JSON.parse(atob(dto.tgAuthResult))
+  const result = await this.authGrpcClient.telegramVerify({ query })
+
+  if ('url' in result && result.url) {
+    return result  // Новый пользователь - нужен номер телефона
+  }
+  // Существующий пользователь - возвращаем токены
+}
+
+// auth-service/src/modules/telegram/telegram.service.ts:94-115
+private checkTelegramAuth(query: Record<string, string>) {
+  const hash = query.hash;
+  const dataCheckArr = Object.keys(query)
+    .filter((key) => key !== "hash")
+    .sort()
+    .map((k) => `${k}=${query[k]}`);
+
+  const dataCheckStr = dataCheckArr.join("\n");
+  const secretKey = createHash("sha256")
+    .update(`${this.BOT_ID}:${this.BOT_TOKEN}`)
+    .digest();
+  const hmac = createHmac("sha256", secretKey)
+    .update(dataCheckStr)
+    .digest("hex");
+
+  return hmac === hash;  // Проверка подлинности
+}
+```
+
+---
+
+### **Шаг 4A: Существующий пользователь (Auth)**
+
+**Что происходит:**
+
+1. Auth Service проверяет наличие пользователя по `telegramId`
+2. Если пользователь найден И у него есть номер телефона → генерируются токены
+3. Gateway устанавливает `refreshToken` в cookie
+4. Frontend получает `accessToken`
+
+**Код:**
+
+```typescript
+// auth-service/src/modules/telegram/telegram.service.ts:72-79
+const existingUser =
+  await this.telegramRepository.findUserByTelegramId(telegramId);
+
+if (existingUser && existingUser.phone) {
+  return this.tokenService.generateTokens(existingUser.id);
+}
+```
+
+**Результат:** Пользователь авторизован ✅
+
+---
+
+### **Шаг 4B: Новый пользователь - создание сессии (Auth → Redis)**
+
+**Что происходит:**
+
+1. Пользователь не найден ИЛИ у него нет номера телефона
+2. Auth Service генерирует уникальный `sessionId` (32 символа hex)
+3. Данные Telegram сохраняются в Redis с TTL 5 минут
+4. Возвращается URL для перехода в бот с параметром `start`
+
+**Код:**
+
+```typescript
+// auth-service/src/modules/telegram/telegram.service.ts:80-91
+const sessionId = randomBytes(16).toString("hex");
+await this.redisService.set(
+  `telegram_session:${sessionId}`,
+  JSON.stringify({
+    telegramId,
+    username: data.query.username,
+  }),
+  "EX",
+  300, // 5 минут
+);
+return { url: `http://t.me/${this.BOT_USERNAME}?start=${sessionId}` };
+```
+
+**Результат:** Frontend получает:
+
+```json
+{
+  "url": "http://t.me/ticket_987_for_cinema_bot?start=a1b2c3d4e5f6..."
+}
+```
+
+---
+
+### **Шаг 5: Переход в Telegram бот**
+
+**Что происходит:**
+
+1. Frontend перенаправляет пользователя на URL бота
+2. Telegram открывается с ботом и автоматически отправляет `/start a1b2c3d4e5f6...`
+3. Бот получает команду с параметром `sessionId`
+
+---
+
+### **Шаг 6: Обработка /start в боте**
+
+**Что происходит:**
+
+1. Бот получает команду `/start` с параметром `sessionId`
+2. Сохраняет `sessionId` в сессию пользователя
+3. Отправляет сообщение с кнопкой "Отправить номер"
+
+**Код:**
+
+```typescript
+// bot-service/src/modules/bot/handlers/start.handler.ts:3-22
+export const registerStartHandler = (bot: Telegraf) => {
+  bot.start(async (ctx) => {
+    const sessionId = ctx.startPayload; // "a1b2c3d4e5f6..."
+
+    if (!(ctx as any).session) {
+      (ctx as any).session = {};
+    }
+
+    if (sessionId) {
+      (ctx as any).session.id = sessionId; // Сохраняем в сессию
+    }
+
+    await ctx.reply(
+      "Для завершения авторизации отправте свой номер телефона",
+      Markup.keyboard([[Markup.button.contactRequest("Отправить номер")]])
+        .resize()
+        .oneTime(),
+    );
+  });
+};
+```
+
+**Результат:** Пользователь видит сообщение с кнопкой для отправки контакта
+
+---
+
+### **Шаг 7: Отправка номера телефона**
+
+**Что происходит:**
+
+1. Пользователь нажимает кнопку "Отправить номер"
+2. Telegram отправляет контакт боту
+3. Бот получает событие `contact` с номером телефона
+4. Бот извлекает `sessionId` из сессии пользователя
+
+**Код:**
+
+```typescript
+// bot-service/src/modules/bot/handlers/contact.handler.ts:3-13
+export const registerContactHandler = (bot: Telegraf) => {
+  bot.on("contact", async (ctx) => {
+    const phone = ctx.message.contact.phone_number; // "+375297888192"
+
+    console.log("Получен номер телефона:", phone);
+
+    await ctx.reply(
+      `✅ Спасибо! Ваш номер телефона получен: ${phone}\n\nАвторизация завершена!`,
+    );
+  });
+};
+```
+
+**Результат:**
+
+- Консоль: `Получен номер телефона: +375297888192`
+- Telegram: `✅ Спасибо! Ваш номер телефона получен: +375297888192`
+
+---
+
+### **Шаг 8: Связывание номера с аккаунтом (Bot → Auth → Database)**
+
+**⚠️ ТЕКУЩЕЕ СОСТОЯНИЕ:** Этот шаг **НЕ РЕАЛИЗОВАН** в коде!
+
+**Что ДОЛЖНО происходить:**
+
+1. Бот извлекает `sessionId` из сессии
+2. Бот отправляет gRPC запрос в Auth Service с `sessionId` и `phone`
+3. Auth Service:
+   - Получает данные из Redis по ключу `telegram_session:${sessionId}`
+   - Извлекает `telegramId` и `username`
+   - Создает или обновляет пользователя в БД с номером телефона
+   - Генерирует токены
+   - Возвращает токены боту
+4. Бот отправляет пользователю ссылку для возврата на сайт с токенами
+
+**Код, который НУЖНО добавить:**
+
+```typescript
+// bot-service/src/modules/bot/handlers/contact.handler.ts
+export const registerContactHandler = (bot: Telegraf) => {
+  bot.on("contact", async (ctx) => {
+    const phone = ctx.message.contact.phone_number;
+    const sessionId = (ctx as any).session?.id;
+
+    if (!sessionId) {
+      await ctx.reply("❌ Ошибка: сессия не найдена. Начните заново с /start");
+      return;
+    }
+
+    // TODO: Отправить gRPC запрос в auth-service
+    const result = await authGrpcClient.completePhoneAuth({
+      sessionId,
+      phone,
+    });
+
+    if (result.success) {
+      await ctx.reply(
+        `✅ Авторизация завершена!\n\nВернитесь на сайт для продолжения.`,
+        Markup.inlineKeyboard([
+          [
+            Markup.button.url(
+              "Вернуться на сайт",
+              `${FRONTEND_URL}/auth/callback?token=${result.accessToken}`,
+            ),
+          ],
+        ]),
+      );
+    }
+  });
+};
+```
+
+---
+
+## 📋 **Итоговая схема потока данных**
+
+```
+┌─────────────┐
+│  Frontend   │
+└──────┬──────┘
+       │ 1. GET /auth/telegram
+       ▼
+┌─────────────┐
+│   Gateway   │
+└──────┬──────┘
+       │ 2. gRPC TelegramInit()
+       ▼
+┌─────────────┐
+│Auth Service │ → Генерирует OAuth URL
+└──────┬──────┘
+       │ 3. Возвращает URL
+       ▼
+┌─────────────┐
+│  Frontend   │ → Перенаправляет на Telegram OAuth
+└──────┬──────┘
+       │ 4. Пользователь авторизуется
+       ▼
+┌─────────────┐
+│  Telegram   │ → Возвращает на сайт с hash
+└──────┬──────┘
+       │ 5. POST /auth/telegram/verify
+       ▼
+┌─────────────┐
+│   Gateway   │
+└──────┬──────┘
+       │ 6. gRPC TelegramVerify()
+       ▼
+┌─────────────┐
+│Auth Service │ → Проверяет HMAC
+└──────┬──────┘
+       │
+       ├─ Пользователь существует → Возвращает токены ✅
+       │
+       └─ Новый пользователь:
+          │ 7. Создает sessionId
+          │ 8. Сохраняет в Redis
+          ▼
+       ┌─────────────┐
+       │    Redis    │ telegram_session:abc123 → {telegramId, username}
+       └─────────────┘
+          │ 9. Возвращает URL бота
+          ▼
+       ┌─────────────┐
+       │  Frontend   │ → Перенаправляет в Telegram бот
+       └──────┬──────┘
+              │ 10. /start sessionId
+              ▼
+       ┌─────────────┐
+       │ Telegram Bot│ → Сохраняет sessionId в сессию
+       └──────┬──────┘
+              │ 11. Показывает кнопку "Отправить номер"
+              ▼
+       ┌─────────────┐
+       │    User     │ → Нажимает кнопку
+       └──────┬──────┘
+              │ 12. Отправляет контакт
+              ▼
+       ┌─────────────┐
+       │ Telegram Bot│ → Получает номер телефона
+       └──────┬──────┘
+              │ 13. ⚠️ НУЖНО: gRPC CompletePhoneAuth()
+              ▼
+       ┌─────────────┐
+       │Auth Service │ → Создает/обновляет пользователя
+       └──────┬──────┘   → Генерирует токены
+              │
+              ▼
+       ┌─────────────┐
+       │  Database   │ → Сохраняет user с phone и telegramId
+       └─────────────┘
+```
+
+---
+
+## ⚠️ **Что НЕ РЕАЛИЗОВАНО:**
+
+1. **gRPC метод `CompletePhoneAuth` в Auth Service** - для связывания номера телефона с Telegram аккаунтом
+2. **gRPC клиент в Bot Service** - для отправки запросов в Auth Service
+3. **Обработка токенов в боте** - возврат пользователя на сайт с токенами
+4. **Обработка callback на фронтенде** - прием токенов и завершение авторизации
+
+---
+
+## ✅ **Что РАБОТАЕТ:**
+
+1. ✅ Генерация OAuth URL для Telegram
+2. ✅ Верификация Telegram данных через HMAC
+3. ✅ Создание временной сессии в Redis
+4. ✅ Получение номера телефона через бота
+5. ✅ Авторизация существующих пользователей
 
 ---
 

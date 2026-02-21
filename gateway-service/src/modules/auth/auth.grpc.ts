@@ -6,6 +6,8 @@ import type {
 	RefreshTokensResponse,
 	SendOtpRequest,
 	SendOtpResponse,
+	TelegramConsumeRequest,
+	TelegramConsumeResponse,
 	TelegramInitResponse,
 	TelegramVerifyRequest,
 	TelegramVerifyResponse,
@@ -75,5 +77,11 @@ export class AuthGrpcClient implements OnModuleInit {
 		data: TelegramVerifyRequest
 	): Promise<TelegramVerifyResponse> {
 		return lastValueFrom(this.authClient.telegramVerify(data))
+	}
+
+	public async telegramConsume(
+		data: TelegramConsumeRequest
+	): Promise<TelegramConsumeResponse> {
+		return lastValueFrom(this.authClient.telegramConsume(data))
 	}
 }
